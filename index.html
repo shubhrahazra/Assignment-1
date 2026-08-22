@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <!-- Stylesheet with Cache Busting -->
-  <link rel="stylesheet" href="style.css?v=2.3" />
+  <link rel="stylesheet" href="style.css?v=2.4" />
 </head>
 <body>
   <!-- Background Glow Accents -->
@@ -116,11 +116,14 @@
           </div>
           <div class="endpoint-selector-wrapper">
             <label for="apiSelect" class="sr-only">Select API</label>
-            <select id="apiSelect" class="custom-select">
-              <option value="posts">JSONPlaceholder (/posts)</option>
-              <option value="comments">JSONPlaceholder (/comments)</option>
-              <option value="todos">JSONPlaceholder (/todos)</option>
-            </select>
+            <div class="custom-select-container">
+              <i class="fa-solid fa-server select-prefix-icon"></i>
+              <select id="apiSelect" class="custom-select select-styled">
+                <option value="posts">JSONPlaceholder (/posts)</option>
+                <option value="comments">JSONPlaceholder (/comments)</option>
+                <option value="todos">JSONPlaceholder (/todos)</option>
+              </select>
+            </div>
           </div>
         </div>
 
