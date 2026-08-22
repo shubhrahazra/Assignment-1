@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NovaPost — Public REST API POST Portal & Data Manager</title>
+  <meta name="description" content="A modern, high-performance web application to submit POST requests to public REST APIs and visualize responses in an interactive data table." />
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Background Glow Accents -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <!-- Header Navigation -->
+  <header class="app-header">
+    <div class="container header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-bolt-lightning"></i>
+        </div>
+        <div class="brand-text">
+          <h1>Nova<span>Post</span></h1>
+          <span class="badge badge-subtle">REST API Client</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="api-status-indicator" title="API Status: Online">
+          <span class="status-dot online"></span>
+          <span class="status-label" id="currentEndpointLabel">DummyJSON API</span>
+        </div>
+
+        <button id="guideBtn" class="btn btn-secondary btn-sm" title="View Architecture & HTTP Guide">
+          <i class="fa-solid fa-book-open"></i>
+          <span>API Guide</span>
+        </button>
+
+        <button id="themeToggleBtn" class="btn btn-icon btn-secondary" aria-label="Toggle Theme" title="Toggle Dark/Light Mode">
+          <i class="fa-solid fa-sun light-icon"></i>
+          <i class="fa-solid fa-moon dark-icon"></i>
+        </button>
+
+        <a href="https://github.com/shubhrahazra/Assignment-1" target="_blank" rel="noopener noreferrer" class="btn btn-icon btn-secondary" title="View Source on GitHub">
+          <i class="fa-brands fa-github"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Wrapper -->
+  <main class="container main-content">
+    
+    <!-- Hero / Statistics Banner -->
+    <section class="metrics-grid">
+      <div class="metric-card glass-card">
+        <div class="metric-icon metric-purple">
+          <i class="fa-solid fa-paper-plane"></i>
+        </div>
+        <div class="metric-info">
+          <span class="metric-title">Total POST Requests</span>
+          <h3 class="metric-value" id="statTotalRequests">0</h3>
+        </div>
+      </div>
+
+      <div class="metric-card glass-card">
+        <div class="metric-icon metric-emerald">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="metric-info">
+          <span class="metric-title">Success Rate</span>
+          <h3 class="metric-value" id="statSuccessRate">100%</h3>
+        </div>
+      </div>
+
+      <div class="metric-card glass-card">
+        <div class="metric-icon metric-amber">
+          <i class="fa-solid fa-gauge-high"></i>
+        </div>
+        <div class="metric-info">
+          <span class="metric-title">Avg. Latency</span>
+          <h3 class="metric-value" id="statAvgLatency">0 ms</h3>
+        </div>
+      </div>
+
+      <div class="metric-card glass-card">
+        <div class="metric-icon metric-cyan">
+          <i class="fa-solid fa-database"></i>
+        </div>
+        <div class="metric-info">
+          <span class="metric-title">Saved Records</span>
+          <h3 class="metric-value" id="statTotalRecords">0</h3>
+        </div>
+      </div>
+    </section>
+
+    <!-- Split Section: Form & Live Request Inspector -->
+    <section class="portal-grid">
+      
+      <!-- Left Column: Modern POST Form Card -->
+      <div class="card glass-card form-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-badge">HTTP POST</span>
+            <h2>Create & Dispatch Resource</h2>
+          </div>
+          <div class="endpoint-selector-wrapper">
+            <label for="apiSelect" class="sr-only">Select API</label>
+            <select id="apiSelect" class="custom-select">
+              <option value="dummyjson">DummyJSON (/products/add)</option>
+              <option value="jsonplaceholder">JSONPlaceholder (/posts)</option>
+              <option value="dummyjson_posts">DummyJSON (/posts/add)</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="card-desc">
+          Fill out the fields below to dispatch a validated <code>POST</code> payload with <code>Content-Type: application/json</code>.
+        </p>
+
+        <form id="postApiForm" novalidate>
+          
+          <!-- Field 1: Title / Name -->
+          <div class="form-group" id="groupTitle">
+            <label for="inputTitle" class="form-label">
+              <span id="labelTitle">Resource Title / Product Name</span>
+              <span class="required-star">*</span>
+            </label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-heading input-icon"></i>
+              <input 
+                type="text" 
+                id="inputTitle" 
+                name="title" 
+                class="form-control" 
+                placeholder="e.g. Wireless Noise-Cancelling Headphones" 
+                required 
+                minlength="3"
+                maxlength="120"
+              />
+            </div>
+            <span class="form-hint" id="hintTitle">Must be at least 3 characters.</span>
+          </div>
+
+          <!-- Dynamic Row: Category & Value/Price -->
+          <div class="form-row">
+            <!-- Field 2: Category / Role -->
+            <div class="form-group" id="groupCategory">
+              <label for="inputCategory" class="form-label">
+                <span id="labelCategory">Category / Department</span>
+                <span class="required-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-layer-group input-icon"></i>
+                <select id="inputCategory" name="category" class="form-control" required>
+                  <option value="">-- Choose Category --</option>
+                  <option value="electronics">Electronics & Tech</option>
+                  <option value="audio">Audio & Gadgets</option>
+                  <option value="home">Home & Living</option>
+                  <option value="fashion">Apparel & Fashion</option>
+                  <option value="productivity">Software & Tools</option>
+                  <option value="general">General</option>
+                </select>
+              </div>
+              <span class="form-hint">Select a relevant category.</span>
+            </div>
+
+            <!-- Field 3: Numerical Value (Price / UserID) -->
+            <div class="form-group" id="groupValue">
+              <label for="inputValue" class="form-label">
+                <span id="labelValue">Price ($ USD)</span>
+                <span class="required-star">*</span>
+              </label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-tag input-icon" id="iconValue"></i>
+                <input 
+                  type="number" 
+                  id="inputValue" 
+                  name="value" 
+                  class="form-control" 
+                  placeholder="e.g. 199.99" 
+                  step="0.01" 
+                  min="0.01" 
+                  max="100000"
+                  required 
+                />
+              </div>
+              <span class="form-hint" id="hintValue">Enter a valid positive number.</span>
+            </div>
+          </div>
+
+          <!-- Field 4: Tag / Brand / Job Title -->
+          <div class="form-row">
+            <div class="form-group" id="groupBrand">
+              <label for="inputBrand" class="form-label">
+                <span id="labelBrand">Brand / Author / Tag</span>
+              </label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-feather-pointed input-icon"></i>
+                <input 
+                  type="text" 
+                  id="inputBrand" 
+                  name="brand" 
+                  class="form-control" 
+                  placeholder="e.g. NovaTech Labs" 
+                  maxlength="60"
+                />
+              </div>
+              <span class="form-hint">Identifier or attribution tag.</span>
+            </div>
+
+            <div class="form-group" id="groupRating">
+              <label for="inputRating" class="form-label">
+                <span id="labelRating">Stock / Rating Score</span>
+              </label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-star input-icon"></i>
+                <input 
+                  type="number" 
+                  id="inputRating" 
+                  name="rating" 
+                  class="form-control" 
+                  placeholder="e.g. 85" 
+                  min="1" 
+                  max="10000"
+                />
+              </div>
+              <span class="form-hint">Inventory quantity or score.</span>
+            </div>
+          </div>
+
+          <!-- Field 5: Description / Body -->
+          <div class="form-group" id="groupDescription">
+            <label for="inputDescription" class="form-label">
+              <span id="labelDescription">Detailed Description / Content Body</span>
+              <span class="required-star">*</span>
+            </label>
+            <div class="input-wrapper">
+              <textarea 
+                id="inputDescription" 
+                name="description" 
+                class="form-control textarea-control" 
+                rows="3" 
+                placeholder="Write a concise overview, specifications, or body text for this resource..." 
+                required 
+                minlength="10"
+                maxlength="500"
+              ></textarea>
+            </div>
+            <div class="field-meta">
+              <span class="form-hint">Provide at least 10 characters.</span>
+              <span class="char-counter" id="charCounter">0 / 500</span>
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="form-quick-actions">
+            <button type="button" id="btnFillSample" class="btn btn-outline btn-sm">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>Fill Sample Data</span>
+            </button>
+
+            <button type="button" id="btnPreviewPayload" class="btn btn-outline btn-sm">
+              <i class="fa-solid fa-code"></i>
+              <span>Preview Payload</span>
+            </button>
+
+            <button type="button" id="btnResetForm" class="btn btn-ghost btn-sm text-muted">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>Clear</span>
+            </button>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="btnSubmit" class="btn btn-primary btn-block btn-lg">
+            <span class="btn-spinner" id="btnSpinner" aria-hidden="true"></span>
+            <i class="fa-solid fa-paper-plane btn-icon-main" id="btnSubmitIcon"></i>
+            <span id="btnSubmitText">Send POST Request</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Right Column: Live Request & API Inspector -->
+      <div class="card glass-card inspector-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-badge badge-cyan">Inspector</span>
+            <h2>Live API Terminal</h2>
+          </div>
+          <div class="terminal-actions">
+            <button id="btnCopyEndpoint" class="btn btn-icon btn-sm btn-ghost" title="Copy Target URL">
+              <i class="fa-regular fa-copy"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="terminal-container">
+          <div class="terminal-bar">
+            <div class="terminal-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <div class="terminal-url">
+              <span class="method-badge">POST</span>
+              <span class="url-text" id="terminalUrl">https://dummyjson.com/products/add</span>
+            </div>
+          </div>
+
+          <div class="terminal-content">
+            <div class="terminal-section">
+              <div class="terminal-section-title">
+                <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                <span>REQUEST HEADERS & BODY</span>
+              </div>
+              <pre class="code-block"><code id="terminalRequestBody">{
+  "Content-Type": "application/json",
+  "payload": {
+    "title": "Awaiting form input...",
+    "category": "...",
+    "price": 0
+  }
+}</code></pre>
+            </div>
+
+            <div class="terminal-section">
+              <div class="terminal-section-title">
+                <i class="fa-solid fa-arrow-down-to-bracket"></i>
+                <span>LAST SERVER RESPONSE</span>
+                <span class="response-status-badge badge-neutral" id="terminalResponseStatus">Awaiting Request</span>
+              </div>
+              <pre class="code-block"><code id="terminalResponseBody">// Response from server will be displayed here in real-time...</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="inspector-footer">
+          <div class="latency-pill">
+            <i class="fa-solid fa-stopwatch"></i>
+            <span>Latency: <strong id="terminalLatency">-- ms</strong></span>
+          </div>
+          <div class="timestamp-pill">
+            <i class="fa-regular fa-clock"></i>
+            <span id="terminalTimestamp">Ready</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tabular Data Section -->
+    <section class="card glass-card table-section">
+      <div class="table-section-header">
+        <div class="table-title-group">
+          <div class="table-title-row">
+            <h2>Submitted API Records</h2>
+            <span class="badge badge-count" id="tableRecordCount">0 records</span>
+          </div>
+          <p class="section-subtitle">Real-time table populated by successful <code>POST</code> API responses with persistence.</p>
+        </div>
+
+        <div class="table-toolbar">
+          <!-- Search Input -->
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="tableSearch" placeholder="Search by title, category, ID..." class="form-control table-search-input" />
+            <button id="btnClearSearch" class="btn-clear-search hidden" title="Clear search">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <!-- Category Filter -->
+          <div class="filter-box">
+            <select id="tableCategoryFilter" class="custom-select filter-select">
+              <option value="ALL">All Categories</option>
+              <option value="electronics">Electronics</option>
+              <option value="audio">Audio</option>
+              <option value="home">Home</option>
+              <option value="fashion">Fashion</option>
+              <option value="productivity">Software</option>
+              <option value="general">General</option>
+            </select>
+          </div>
+
+          <!-- Actions: Export CSV / JSON / Clear -->
+          <div class="toolbar-actions">
+            <button id="btnExportCsv" class="btn btn-secondary btn-sm" title="Export as CSV Spreadsheet">
+              <i class="fa-solid fa-file-csv"></i>
+              <span>Export CSV</span>
+            </button>
+
+            <button id="btnExportJson" class="btn btn-secondary btn-sm" title="Export as JSON Data">
+              <i class="fa-solid fa-file-code"></i>
+              <span>JSON</span>
+            </button>
+
+            <button id="btnClearHistory" class="btn btn-danger-ghost btn-sm" title="Clear all local submissions">
+              <i class="fa-solid fa-trash-can"></i>
+              <span>Clear</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Responsive Table Container -->
+      <div class="table-responsive">
+        <table class="data-table" id="dataTable">
+          <thead>
+            <tr>
+              <th data-sort="id" class="sortable">
+                <span>Response ID</span>
+                <i class="fa-solid fa-sort sort-icon"></i>
+              </th>
+              <th data-sort="timestamp" class="sortable">
+                <span>Created At</span>
+                <i class="fa-solid fa-sort sort-icon"></i>
+              </th>
+              <th data-sort="title" class="sortable">
+                <span>Resource Title</span>
+                <i class="fa-solid fa-sort sort-icon"></i>
+              </th>
+              <th data-sort="category" class="sortable">
+                <span>Category</span>
+                <i class="fa-solid fa-sort sort-icon"></i>
+              </th>
+              <th data-sort="price" class="sortable">
+                <span>Price / Value</span>
+                <i class="fa-solid fa-sort sort-icon"></i>
+              </th>
+              <th>
+                <span>Summary / Description</span>
+              </th>
+              <th data-sort="status" class="sortable">
+                <span>Status</span>
+                <i class="fa-solid fa-sort sort-icon"></i>
+              </th>
+              <th class="text-right">
+                <span>Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Populated via JavaScript -->
+          </tbody>
+        </table>
+
+        <!-- Empty State Message -->
+        <div id="tableEmptyState" class="empty-state hidden">
+          <div class="empty-icon">
+            <i class="fa-solid fa-box-open"></i>
+          </div>
+          <h3>No API Submissions Found</h3>
+          <p>Submit your first resource above or click "Fill Sample Data" to make a live POST request.</p>
+          <button id="btnEmptySample" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Load Sample & Submit</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal 1: Raw JSON Response Inspector Modal -->
+  <div class="modal-overlay hidden" id="responseModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card glass-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-code text-accent"></i>
+          <h3 id="modalTitle">API Response Payload Inspector</h3>
+        </div>
+        <button class="btn btn-icon btn-ghost modal-close" id="btnCloseModal" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-meta-bar">
+        <div class="modal-meta-item">
+          <span class="meta-label">Status Code:</span>
+          <span class="badge badge-success" id="modalStatusCode">201 Created</span>
+        </div>
+        <div class="modal-meta-item">
+          <span class="meta-label">Response Time:</span>
+          <span class="meta-val" id="modalLatency">124 ms</span>
+        </div>
+        <div class="modal-meta-item">
+          <span class="meta-label">API Source:</span>
+          <span class="meta-val" id="modalApiSource">DummyJSON</span>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="code-container">
+          <div class="code-header">
+            <span>JSON RESPONSE BODY</span>
+            <button id="btnCopyModalJson" class="btn btn-outline btn-xs">
+              <i class="fa-regular fa-copy"></i>
+              <span>Copy JSON</span>
+            </button>
+          </div>
+          <pre class="modal-code-block"><code id="modalJsonContent">{}</code></pre>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCloseModalBottom">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: API Architecture & Education Guide -->
+  <div class="modal-overlay hidden" id="guideModal" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="modal-card glass-card guide-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-graduation-cap text-accent"></i>
+          <h3 id="guideTitle">Public POST API & Architecture Guide</h3>
+        </div>
+        <button class="btn btn-icon btn-ghost modal-close" id="btnCloseGuideModal" aria-label="Close guide modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body guide-body">
+        <section class="guide-section">
+          <h4><i class="fa-solid fa-diagram-project"></i> 1. The HTTP POST Lifecycle</h4>
+          <p>
+            A <code>POST</code> request is designed to submit an entity to the specified resource, often causing a change in state or side effects on the server.
+          </p>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <span class="step-num">1</span>
+              <h5>Client Form</h5>
+              <p>Captures and validates user inputs on the frontend.</p>
+            </div>
+            <div class="flow-step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="flow-step">
+              <span class="step-num">2</span>
+              <h5>JSON Payload</h5>
+              <p>Serialized with <code>JSON.stringify()</code> and <code>application/json</code> header.</p>
+            </div>
+            <div class="flow-step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="flow-step">
+              <span class="step-num">3</span>
+              <h5>Fetch API</h5>
+              <p>Asynchronous HTTP request sent over HTTPS.</p>
+            </div>
+            <div class="flow-step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="flow-step">
+              <span class="step-num">4</span>
+              <h5>Table Render</h5>
+              <p>Server-assigned ID & attributes rendered dynamically.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="guide-section">
+          <h4><i class="fa-solid fa-code"></i> 2. Vanilla JavaScript Implementation</h4>
+          <pre class="code-block"><code>// Dispatches a POST request with proper headers and error handling
+async function submitData(url, data) {
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result; // contains server-generated ID, timestamp, etc.
+  } catch (error) {
+    console.error('API POST Failed:', error);
+    throw error;
+  }
+}</code></pre>
+        </section>
+
+        <section class="guide-section">
+          <h4><i class="fa-solid fa-shield-halved"></i> 3. Status Codes & Error Handling</h4>
+          <ul class="guide-list">
+            <li><strong>201 Created:</strong> The request succeeded and a new resource was created on the server (Standard POST success).</li>
+            <li><strong>200 OK:</strong> Standard successful response for REST operations.</li>
+            <li><strong>400 Bad Request:</strong> Client sent invalid or malformed data.</li>
+            <li><strong>CORS & Security:</strong> Public mock APIs (DummyJSON, JSONPlaceholder) provide wildcard <code>Access-Control-Allow-Origin: *</code> headers allowing browser client access.</li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnCloseGuideBottom">Got it, Let's Build!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container footer-container">
+      <div class="footer-left">
+        <p>Built with <i class="fa-solid fa-heart text-danger"></i> using pure HTML, Vanilla CSS & Vanilla JavaScript.</p>
+        <span class="footer-subtext">Assignment 1 — Public POST API + Modern Form + Tabular Data</span>
+      </div>
+      <div class="footer-right">
+        <a href="https://github.com/shubhrahazra/Assignment-1" target="_blank" rel="noopener noreferrer" class="footer-link">
+          <i class="fa-brands fa-github"></i>
+          <span>GitHub Repo</span>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Main Application Script -->
+  <script src="app.js"></script>
+</body>
+</html>
