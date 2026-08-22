@@ -154,14 +154,22 @@ const StorageManager = {
   },
 
   init() {
+    // Clear any outdated legacy keys
+    try {
+      localStorage.removeItem('novapost_submissions_v1');
+      localStorage.removeItem('novapost_active_api_v1');
+    } catch (e) {}
+
     // Load Theme
     const savedTheme = localStorage.getItem(this.KEYS.THEME) || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
 
-    // Load API Choice
+    // Load API Choice with safety check
     const savedApi = localStorage.getItem(this.KEYS.API_CHOICE);
     if (savedApi && API_CONFIG[savedApi]) {
       AppState.currentApi = savedApi;
+    } else {
+      AppState.currentApi = 'posts';
     }
 
     // Load Metrics
@@ -182,6 +190,7 @@ const StorageManager = {
       }
     } catch (e) {
       console.warn('Could not parse submissions:', e);
+      AppState.submissions = [];
     }
   },
 
@@ -270,16 +279,18 @@ const ToastService = {
 
 const ApiClient = {
   async sendPost(endpointKey, formData) {
-    const config = API_CONFIG[endpointKey];
-    if (!config) throw new Error(`Unknown API endpoint: ${endpointKey}`);
+    // Safe fallback if key is invalid
+    const activeKey = API_CONFIG[endpointKey] ? endpointKey : 'posts';
+    const config = API_CONFIG[activeKey];
 
     const payload = config.formatPayload(formData);
     const url = config.url;
 
+    console.log(`[NovaPost] Dispatching POST to: ${url}`, payload);
     const startTime = performance.now();
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
 
     try {
       const response = await fetch(url, {
@@ -294,7 +305,7 @@ const ApiClient = {
 
       clearTimeout(timeoutId);
       const endTime = performance.now();
-      const latency = Math.round(endTime - startTime);
+      const latency = Math.max(1, Math.round(endTime - startTime));
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -302,6 +313,7 @@ const ApiClient = {
       }
 
       const responseData = await response.json();
+      console.log(`[NovaPost] Server Response (${latency}ms):`, responseData);
 
       return {
         success: true,
@@ -314,10 +326,10 @@ const ApiClient = {
     } catch (error) {
       clearTimeout(timeoutId);
       const endTime = performance.now();
-      const latency = Math.round(endTime - startTime);
+      const latency = Math.max(1, Math.round(endTime - startTime));
 
       if (error.name === 'AbortError') {
-        throw new Error('Request timed out after 15 seconds. Please check your network.');
+        throw new Error('Request timed out (6s). Please check your internet connection.');
       }
       throw error;
     }
