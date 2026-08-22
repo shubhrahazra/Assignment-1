@@ -3,10 +3,13 @@
 > **Assignment 1**: Public POST API + Form + Tabular Data  
 > Built strictly using **Plain HTML5, CSS3 (Vanilla), and Modern JavaScript (ES6+)**. No frameworks, no external CSS libraries.
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-000000?style=flat&logo=vercel&logoColor=white)](https://novapostrestapi.vercel.app/)
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
 [![Vanilla CSS](https://img.shields.io/badge/CSS3-Vanilla-1572B6?style=flat&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=flat&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+🌐 **Live Website**: **[https://novapostrestapi.vercel.app/](https://novapostrestapi.vercel.app/)**
 
 ---
 
