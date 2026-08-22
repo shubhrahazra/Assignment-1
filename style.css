@@ -137,6 +137,33 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+/* Allow text input & copy only in actual editable inputs and code containers */
+input,
+textarea,
+pre,
+code {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+  cursor: text;
+}
+
+button,
+a,
+select,
+.btn,
+.custom-select,
+.modal-close,
+.sortable {
+  cursor: pointer !important;
 }
 
 html {
