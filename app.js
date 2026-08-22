@@ -8,116 +8,23 @@
 // ============================================================================
 
 const API_CONFIG = {
-  dummyjson: {
-    name: 'DummyJSON Products API',
-    url: 'https://dummyjson.com/products/add',
-    method: 'POST',
-    fields: {
-      titleLabel: 'Product Name',
-      titlePlaceholder: 'e.g. Wireless Noise-Cancelling Headphones',
-      categoryLabel: 'Product Category',
-      valueLabel: 'Price ($ USD)',
-      valuePlaceholder: 'e.g. 199.99',
-      valueIcon: 'fa-tag',
-      brandLabel: 'Brand / Manufacturer',
-      brandPlaceholder: 'e.g. Sony Audio',
-      ratingLabel: 'Stock Quantity',
-      ratingPlaceholder: 'e.g. 45',
-      descLabel: 'Product Overview & Specs'
-    },
-    sampleData: [
-      {
-        title: 'Sony WH-1000XM5 Wireless Headphones',
-        category: 'audio',
-        value: 399.99,
-        brand: 'Sony Electronics',
-        rating: 65,
-        description: 'Industry-leading noise cancellation with two processors and 8 microphones for exceptional sound quality and crystal-clear hands-free calling.'
-      },
-      {
-        title: 'Logitech MX Master 3S Ergonomic Mouse',
-        category: 'productivity',
-        value: 99.99,
-        brand: 'Logitech',
-        rating: 120,
-        description: 'Quiet click electromagnetic scrolling mouse with 8K DPI sensor that tracks on any surface including glass.'
-      },
-      {
-        title: 'MacBook Pro 16" M3 Max',
-        category: 'electronics',
-        value: 3499.00,
-        brand: 'Apple',
-        rating: 25,
-        description: 'Unprecedented performance for demanding workflows featuring a 16-core CPU, 40-core GPU, and Liquid Retina XDR display.'
-      },
-      {
-        title: 'Nordic Minimalist Smart Desk Lamp',
-        category: 'home',
-        value: 79.50,
-        brand: 'Lumina Studio',
-        rating: 80,
-        description: 'Dimmable LED ambient lighting with wireless fast-charging base, touch controls, and circadian rhythm scheduling.'
-      }
-    ],
-    formatPayload: (form) => ({
-      title: form.title.trim(),
-      description: form.description.trim(),
-      price: parseFloat(form.value) || 0,
-      category: form.category,
-      brand: form.brand ? form.brand.trim() : 'Generic',
-      stock: parseInt(form.rating, 10) || 10
-    }),
-    normalizeResponse: (res, inputData, latency, statusCode) => ({
-      id: res.id || Math.floor(Math.random() * 900) + 100,
-      timestamp: new Date().toISOString(),
-      apiSource: 'DummyJSON',
-      title: res.title || inputData.title,
-      category: res.category || inputData.category,
-      price: res.price !== undefined ? res.price : inputData.value,
-      brand: res.brand || inputData.brand || 'N/A',
-      rating: res.stock !== undefined ? res.stock : inputData.rating || 0,
-      description: res.description || inputData.description,
-      statusCode: statusCode || 201,
-      latency: latency,
-      rawResponse: res
-    })
-  },
-
-  jsonplaceholder: {
+  posts: {
     name: 'JSONPlaceholder Posts API',
     url: 'https://jsonplaceholder.typicode.com/posts',
     method: 'POST',
     fields: {
       titleLabel: 'Post Title / Headline',
-      titlePlaceholder: 'e.g. Building Scalable Web Apps with Modern APIs',
-      categoryLabel: 'Topic / Department',
-      valueLabel: 'Author ID (1-100)',
+      titlePlaceholder: 'Enter post title (e.g. Asynchronous JavaScript Deep Dive)',
+      categoryLabel: 'Category / Topic',
+      valueLabel: 'User / Author ID (1-100)',
       valuePlaceholder: 'e.g. 1',
       valueIcon: 'fa-user',
-      brandLabel: 'Author Name / Tag',
-      brandPlaceholder: 'e.g. John Doe',
+      brandLabel: 'Author / Tag',
+      brandPlaceholder: 'e.g. Alex Rivera',
       ratingLabel: 'Read Time (Minutes)',
       ratingPlaceholder: 'e.g. 5',
-      descLabel: 'Article Content / Body'
+      descLabel: 'Post Content / Body'
     },
-    sampleData: [
-      {
-        title: 'Mastering Asynchronous JavaScript with Async/Await',
-        category: 'productivity',
-        value: 1,
-        brand: 'Tech Insights',
-        rating: 6,
-        description: 'A deep dive into asynchronous programming in modern JavaScript, exploring promises, fetch API architecture, and microtask queues.'
-      },
-      {
-        title: 'Next-Gen Frontend Architectures in 2026',
-        category: 'electronics',
-        value: 4,
-        brand: 'Dev Weekly',
-        rating: 8,
-        description: 'Exploring modern rendering strategies, hydration boundaries, micro-frontends, and performance optimization techniques.'
-      }
-    ],
     formatPayload: (form) => ({
       title: form.title.trim(),
       body: form.description.trim(),
@@ -126,12 +33,12 @@ const API_CONFIG = {
     normalizeResponse: (res, inputData, latency, statusCode) => ({
       id: res.id || 101,
       timestamp: new Date().toISOString(),
-      apiSource: 'JSONPlaceholder',
+      apiSource: 'JSONPlaceholder (Posts)',
       title: res.title || inputData.title,
-      category: inputData.category || 'productivity',
-      price: `$${inputData.value || '0.00'}`,
-      brand: inputData.brand || 'JSONPlaceholder Author',
-      rating: inputData.rating || 1,
+      category: inputData.category || 'General',
+      price: inputData.value || 1,
+      brand: inputData.brand || 'Author',
+      rating: inputData.rating || 5,
       description: res.body || inputData.description,
       statusCode: statusCode || 201,
       latency: latency,
@@ -139,56 +46,77 @@ const API_CONFIG = {
     })
   },
 
-  dummyjson_posts: {
-    name: 'DummyJSON Articles API',
-    url: 'https://dummyjson.com/posts/add',
+  comments: {
+    name: 'JSONPlaceholder Comments API',
+    url: 'https://jsonplaceholder.typicode.com/comments',
     method: 'POST',
     fields: {
-      titleLabel: 'Article Headline',
-      titlePlaceholder: 'e.g. Architecting Scalable Frontend Applications',
-      categoryLabel: 'Domain / Category',
-      valueLabel: 'Author / User ID (1-50)',
-      valuePlaceholder: 'e.g. 5',
-      valueIcon: 'fa-user-pen',
-      brandLabel: 'Primary Tag / Topic',
-      brandPlaceholder: 'e.g. WebArchitecture',
-      ratingLabel: 'Claps / Reactions Target',
-      ratingPlaceholder: 'e.g. 150',
-      descLabel: 'Article Abstract & Body'
+      titleLabel: 'Comment Subject / Name',
+      titlePlaceholder: 'Enter comment subject (e.g. Feedback on API architecture)',
+      categoryLabel: 'Department / Context',
+      valueLabel: 'Post ID Target (1-100)',
+      valuePlaceholder: 'e.g. 1',
+      valueIcon: 'fa-hashtag',
+      brandLabel: 'Author Email',
+      brandPlaceholder: 'e.g. dev@example.com',
+      ratingLabel: 'Feedback Rating (1-5)',
+      ratingPlaceholder: 'e.g. 5',
+      descLabel: 'Comment Body / Content'
     },
-    sampleData: [
-      {
-        title: 'Architecting Scalable Frontend Applications with Vanilla JS',
-        category: 'productivity',
-        value: 5,
-        brand: 'FrontendEngine',
-        rating: 240,
-        description: 'A comprehensive study on building modular, dependency-free web applications utilizing modern ES6+ features, native Web APIs, and CSS custom properties.'
-      },
-      {
-        title: 'Understanding Asynchronous HTTP Pipelines & Microtasks',
-        category: 'electronics',
-        value: 12,
-        brand: 'JavaScriptDeepDive',
-        rating: 180,
-        description: 'How the browser event loop processes Fetch API promises, network queues, and DOM rendering updates.'
-      }
-    ],
     formatPayload: (form) => ({
-      title: form.title.trim(),
+      name: form.title.trim(),
+      email: form.brand ? form.brand.trim() : 'user@example.com',
       body: form.description.trim(),
-      userId: parseInt(form.value, 10) || 5
+      postId: parseInt(form.value, 10) || 1
     }),
     normalizeResponse: (res, inputData, latency, statusCode) => ({
-      id: res.id || 251,
+      id: res.id || 501,
       timestamp: new Date().toISOString(),
-      apiSource: 'DummyJSON (Posts)',
-      title: res.title || inputData.title,
-      category: inputData.category || 'productivity',
-      price: `$${inputData.value || 0}`,
-      brand: inputData.brand || 'Engineering Lead',
-      rating: inputData.rating || 100,
+      apiSource: 'JSONPlaceholder (Comments)',
+      title: res.name || inputData.title,
+      category: inputData.category || 'General',
+      price: inputData.value || 1,
+      brand: res.email || inputData.brand || 'User',
+      rating: inputData.rating || 5,
       description: res.body || inputData.description,
+      statusCode: statusCode || 201,
+      latency: latency,
+      rawResponse: res
+    })
+  },
+
+  todos: {
+    name: 'JSONPlaceholder Todos API',
+    url: 'https://jsonplaceholder.typicode.com/todos',
+    method: 'POST',
+    fields: {
+      titleLabel: 'Task Title / Activity',
+      titlePlaceholder: 'Enter task description (e.g. Complete REST API integration)',
+      categoryLabel: 'Task Priority / Category',
+      valueLabel: 'User ID (1-100)',
+      valuePlaceholder: 'e.g. 1',
+      valueIcon: 'fa-user-check',
+      brandLabel: 'Assigned Team',
+      brandPlaceholder: 'e.g. Frontend Team',
+      ratingLabel: 'Estimated Hours',
+      ratingPlaceholder: 'e.g. 4',
+      descLabel: 'Task Requirements & Details'
+    },
+    formatPayload: (form) => ({
+      title: form.title.trim(),
+      completed: false,
+      userId: parseInt(form.value, 10) || 1
+    }),
+    normalizeResponse: (res, inputData, latency, statusCode) => ({
+      id: res.id || 201,
+      timestamp: new Date().toISOString(),
+      apiSource: 'JSONPlaceholder (Todos)',
+      title: res.title || inputData.title,
+      category: inputData.category || 'General',
+      price: inputData.value || 1,
+      brand: inputData.brand || 'Team',
+      rating: inputData.rating || 1,
+      description: inputData.description || 'Task created successfully',
       statusCode: statusCode || 201,
       latency: latency,
       rawResponse: res
@@ -196,9 +124,9 @@ const API_CONFIG = {
   }
 };
 
-// Initial state
+// Initial state (Starts 100% clean without mock entries)
 const AppState = {
-  currentApi: 'dummyjson',
+  currentApi: 'posts',
   submissions: [],
   metrics: {
     totalRequests: 0,
@@ -209,7 +137,7 @@ const AppState = {
     searchQuery: '',
     categoryFilter: 'ALL',
     sortColumn: 'timestamp',
-    sortDirection: 'desc' // 'asc' or 'desc'
+    sortDirection: 'desc'
   }
 };
 
@@ -219,10 +147,10 @@ const AppState = {
 
 const StorageManager = {
   KEYS: {
-    SUBMISSIONS: 'novapost_submissions_v1',
-    METRICS: 'novapost_metrics_v1',
-    THEME: 'novapost_theme_v1',
-    API_CHOICE: 'novapost_active_api_v1'
+    SUBMISSIONS: 'novapost_submissions_clean_v2',
+    METRICS: 'novapost_metrics_clean_v2',
+    THEME: 'novapost_theme_clean_v2',
+    API_CHOICE: 'novapost_api_choice_clean_v2'
   },
 
   init() {
@@ -243,7 +171,7 @@ const StorageManager = {
         AppState.metrics = JSON.parse(savedMetrics);
       }
     } catch (e) {
-      console.warn('Could not parse saved metrics:', e);
+      console.warn('Could not parse metrics:', e);
     }
 
     // Load Submissions
@@ -251,76 +179,17 @@ const StorageManager = {
       const savedSubmissions = localStorage.getItem(this.KEYS.SUBMISSIONS);
       if (savedSubmissions) {
         AppState.submissions = JSON.parse(savedSubmissions);
-      } else {
-        // Populate initial demo records for outstanding first impression
-        this.seedInitialData();
       }
     } catch (e) {
       console.warn('Could not parse submissions:', e);
-      this.seedInitialData();
     }
-  },
-
-  seedInitialData() {
-    AppState.submissions = [
-      {
-        id: 195,
-        timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-        apiSource: 'DummyJSON',
-        title: 'Sony WH-1000XM5 Wireless Headphones',
-        category: 'audio',
-        price: 399.99,
-        brand: 'Sony Electronics',
-        rating: 65,
-        description: 'Industry-leading noise cancellation with dual processors for exceptional acoustic fidelity.',
-        statusCode: 201,
-        latency: 182,
-        rawResponse: {
-          id: 195,
-          title: 'Sony WH-1000XM5 Wireless Headphones',
-          price: 399.99,
-          category: 'audio',
-          brand: 'Sony Electronics',
-          stock: 65,
-          description: 'Industry-leading noise cancellation with dual processors for exceptional acoustic fidelity.'
-        }
-      },
-      {
-        id: 101,
-        timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-        apiSource: 'JSONPlaceholder',
-        title: 'Building Resilient Real-Time REST Systems',
-        category: 'productivity',
-        price: 1,
-        brand: 'Engineering Team',
-        rating: 10,
-        description: 'An architectural breakdown of HTTP POST semantics, payload validation, and reliable response handling.',
-        statusCode: 201,
-        latency: 145,
-        rawResponse: {
-          id: 101,
-          title: 'Building Resilient Real-Time REST Systems',
-          body: 'An architectural breakdown of HTTP POST semantics, payload validation, and reliable response handling.',
-          userId: 1
-        }
-      }
-    ];
-
-    AppState.metrics = {
-      totalRequests: 2,
-      successfulRequests: 2,
-      totalLatencyMs: 327
-    };
-
-    this.saveSubmissions();
-    this.saveMetrics();
   },
 
   saveSubmissions() {
     try {
       localStorage.setItem(this.KEYS.SUBMISSIONS, JSON.stringify(AppState.submissions));
     } catch (e) {
-      console.error('Failed to save submissions to localStorage:', e);
+      console.error('Failed to save submissions:', e);
     }
   },
 
@@ -328,7 +197,7 @@ const StorageManager = {
     try {
       localStorage.setItem(this.KEYS.METRICS, JSON.stringify(AppState.metrics));
     } catch (e) {
-      console.error('Failed to save metrics to localStorage:', e);
+      console.error('Failed to save metrics:', e);
     }
   },
 
@@ -409,7 +278,6 @@ const ApiClient = {
 
     const startTime = performance.now();
 
-    // Setup abort controller for timeout safety (15s)
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
@@ -473,7 +341,7 @@ const FormController = {
   submitBtn: document.getElementById('btnSubmit'),
   submitText: document.getElementById('btnSubmitText'),
 
-  // Dynamic Labels
+  // Labels
   labelTitle: document.getElementById('labelTitle'),
   labelCategory: document.getElementById('labelCategory'),
   labelValue: document.getElementById('labelValue'),
@@ -482,7 +350,7 @@ const FormController = {
   labelDesc: document.getElementById('labelDescription'),
   iconValue: document.getElementById('iconValue'),
 
-  // Terminal elements
+  // Terminal
   terminalUrl: document.getElementById('terminalUrl'),
   terminalReqBody: document.getElementById('terminalRequestBody'),
   terminalRespStatus: document.getElementById('terminalResponseStatus'),
@@ -505,10 +373,10 @@ const FormController = {
       StorageManager.saveApiChoice(e.target.value);
       this.updateEndpointUi(e.target.value);
       this.updateLivePayload();
-      ToastService.show('API Target Switched', `Active endpoint: ${API_CONFIG[e.target.value].name}`, 'info', 2500);
+      ToastService.show('API Endpoint Selected', `${API_CONFIG[e.target.value].name}`, 'info', 2500);
     });
 
-    // Input changes for live payload update
+    // Input changes for live preview
     const inputs = [this.titleInput, this.categoryInput, this.valueInput, this.brandInput, this.ratingInput, this.descInput];
     inputs.forEach(input => {
       input.addEventListener('input', () => {
@@ -517,7 +385,7 @@ const FormController = {
       });
     });
 
-    // Character counter for textarea
+    // Character counter
     this.descInput.addEventListener('input', () => {
       const len = this.descInput.value.length;
       this.charCounter.textContent = `${len} / 500`;
@@ -528,10 +396,7 @@ const FormController = {
       }
     });
 
-    // Quick Action: Fill Sample
-    document.getElementById('btnFillSample').addEventListener('click', () => this.fillSampleData());
-
-    // Quick Action: Preview Payload Modal
+    // Preview Payload
     document.getElementById('btnPreviewPayload').addEventListener('click', () => {
       const formData = this.getFormData();
       const config = API_CONFIG[AppState.currentApi];
@@ -550,10 +415,10 @@ const FormController = {
       );
     });
 
-    // Quick Action: Reset
+    // Reset Form
     document.getElementById('btnResetForm').addEventListener('click', () => this.resetForm());
 
-    // Quick Action: Copy Endpoint URL
+    // Copy Endpoint URL
     document.getElementById('btnCopyEndpoint').addEventListener('click', () => {
       const url = API_CONFIG[AppState.currentApi].url;
       navigator.clipboard.writeText(url).then(() => {
@@ -571,10 +436,9 @@ const FormController = {
 
     this.terminalUrl.textContent = config.url;
     if (this.currentEndpointLabel) {
-      this.currentEndpointLabel.textContent = config.name.split(' ')[0] + ' API';
+      this.currentEndpointLabel.textContent = config.name.replace('JSONPlaceholder ', '');
     }
 
-    // Update labels and placeholders
     const f = config.fields;
     this.labelTitle.textContent = f.titleLabel;
     this.titleInput.placeholder = f.titlePlaceholder;
@@ -595,36 +459,12 @@ const FormController = {
   getFormData() {
     return {
       title: this.titleInput.value,
-      category: this.categoryInput.value || 'general',
+      category: this.categoryInput.value || 'General',
       value: this.valueInput.value,
       brand: this.brandInput.value,
       rating: this.ratingInput.value,
       description: this.descInput.value
     };
-  },
-
-  fillSampleData() {
-    const config = API_CONFIG[AppState.currentApi];
-    const samples = config.sampleData;
-    const sample = samples[Math.floor(Math.random() * samples.length)];
-
-    this.titleInput.value = sample.title;
-    this.categoryInput.value = sample.category;
-    this.valueInput.value = sample.value;
-    this.brandInput.value = sample.brand;
-    this.ratingInput.value = sample.rating;
-    this.descInput.value = sample.description;
-
-    this.charCounter.textContent = `${sample.description.length} / 500`;
-
-    // Clear validation styles
-    [this.titleInput, this.categoryInput, this.valueInput, this.descInput].forEach(el => {
-      el.classList.remove('is-invalid');
-      el.classList.add('is-valid');
-    });
-
-    this.updateLivePayload();
-    ToastService.show('Sample Data Loaded', `Generated sample for ${config.name}`, 'info', 2000);
   },
 
   updateLivePayload() {
@@ -673,7 +513,7 @@ const FormController = {
     });
 
     if (!isValid) {
-      ToastService.show('Validation Error', 'Please complete all required fields correctly.', 'warning', 3000);
+      ToastService.show('Required Fields Missing', 'Please fill in all required fields.', 'warning', 3000);
     }
     return isValid;
   },
@@ -685,13 +525,13 @@ const FormController = {
       el.classList.remove('is-invalid', 'is-valid');
     });
     this.updateLivePayload();
-    ToastService.show('Form Reset', 'All input fields cleared', 'info', 1500);
+    ToastService.show('Form Reset', 'Form inputs cleared', 'info', 1500);
   },
 
   setLoading(isLoading) {
     if (isLoading) {
       this.submitBtn.classList.add('is-loading');
-      this.submitText.textContent = 'Dispatching POST...';
+      this.submitText.textContent = 'Sending POST...';
       this.submitBtn.disabled = true;
     } else {
       this.submitBtn.classList.remove('is-loading');
@@ -719,14 +559,12 @@ const FormController = {
     try {
       const result = await ApiClient.sendPost(endpointKey, formData);
 
-      // Update terminal
       this.terminalRespStatus.className = 'response-status-badge badge-success';
       this.terminalRespStatus.textContent = `${result.statusCode} Created`;
       this.terminalResponseBody.textContent = JSON.stringify(result.data, null, 2);
       this.terminalLatency.textContent = `${result.latency} ms`;
       this.terminalTimestamp.textContent = new Date().toLocaleTimeString();
 
-      // Update State
       AppState.submissions.unshift(result.normalized);
       AppState.metrics.totalRequests++;
       AppState.metrics.successfulRequests++;
@@ -735,16 +573,17 @@ const FormController = {
       StorageManager.saveSubmissions();
       StorageManager.saveMetrics();
 
-      // Refresh Dashboard & Table
       MetricsController.render();
       TableController.render();
 
       ToastService.show(
         'POST Request Succeeded!',
-        `Server assigned ID #${result.normalized.id} (${result.latency}ms)`,
+        `Server returned response ID #${result.normalized.id} (${result.latency}ms)`,
         'success',
         4000
       );
+
+      this.resetForm();
 
     } catch (error) {
       console.error('Submission failed:', error);
@@ -767,7 +606,7 @@ const FormController = {
 };
 
 // ============================================================================
-// 6. Table Controller (Rendering, Filtering, Sorting, Exporting)
+// 6. Table Controller
 // ============================================================================
 
 const TableController = {
@@ -785,7 +624,6 @@ const TableController = {
   },
 
   bindEvents() {
-    // Search input
     this.searchInput.addEventListener('input', (e) => {
       AppState.table.searchQuery = e.target.value.trim().toLowerCase();
       if (e.target.value) {
@@ -796,7 +634,6 @@ const TableController = {
       this.render();
     });
 
-    // Clear Search
     this.clearSearchBtn.addEventListener('click', () => {
       this.searchInput.value = '';
       AppState.table.searchQuery = '';
@@ -804,13 +641,11 @@ const TableController = {
       this.render();
     });
 
-    // Category filter
     this.categoryFilter.addEventListener('change', (e) => {
       AppState.table.categoryFilter = e.target.value;
       this.render();
     });
 
-    // Sorting Headers
     this.tableHeaders.forEach(th => {
       th.addEventListener('click', () => {
         const col = th.getAttribute('data-sort');
@@ -825,34 +660,21 @@ const TableController = {
       });
     });
 
-    // Export CSV
     document.getElementById('btnExportCsv').addEventListener('click', () => this.exportCsv());
-
-    // Export JSON
     document.getElementById('btnExportJson').addEventListener('click', () => this.exportJson());
 
-    // Clear History
     document.getElementById('btnClearHistory').addEventListener('click', () => {
       if (AppState.submissions.length === 0) {
-        ToastService.show('Table is empty', 'No submissions to clear', 'info', 2000);
+        ToastService.show('Table is empty', 'No records to clear', 'info', 2000);
         return;
       }
-      if (confirm('Are you sure you want to clear all submitted records from your local history?')) {
+      if (confirm('Clear all submitted records from your local table?')) {
         StorageManager.clearAll();
         this.render();
         MetricsController.render();
-        ToastService.show('History Cleared', 'All stored submissions have been removed.', 'warning', 3000);
+        ToastService.show('Table Cleared', 'All submissions removed', 'warning', 3000);
       }
     });
-
-    // Empty state load sample button
-    const btnEmptySample = document.getElementById('btnEmptySample');
-    if (btnEmptySample) {
-      btnEmptySample.addEventListener('click', () => {
-        FormController.fillSampleData();
-        FormController.form.dispatchEvent(new Event('submit', { cancelable: true }));
-      });
-    }
   },
 
   updateSortHeaderStyles() {
@@ -868,12 +690,10 @@ const TableController = {
   getFilteredAndSortedData() {
     let items = [...AppState.submissions];
 
-    // 1. Filter by category
     if (AppState.table.categoryFilter !== 'ALL') {
       items = items.filter(item => (item.category || '').toLowerCase() === AppState.table.categoryFilter.toLowerCase());
     }
 
-    // 2. Filter by search query
     if (AppState.table.searchQuery) {
       const q = AppState.table.searchQuery;
       items = items.filter(item => {
@@ -886,7 +706,6 @@ const TableController = {
       });
     }
 
-    // 3. Sort
     const col = AppState.table.sortColumn;
     const dir = AppState.table.sortDirection === 'asc' ? 1 : -1;
 
@@ -936,8 +755,6 @@ const TableController = {
         second: '2-digit'
       });
 
-      const displayPrice = typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : (item.price || '$0.00');
-
       html += `
         <tr data-id="${item.id}">
           <td class="cell-id">#${item.id}</td>
@@ -948,7 +765,7 @@ const TableController = {
           <td>
             <span class="badge badge-subtle">${this.escapeHtml(item.category || 'General')}</span>
           </td>
-          <td class="cell-price">${displayPrice}</td>
+          <td class="cell-price">${this.escapeHtml(String(item.price))}</td>
           <td class="cell-desc" title="${this.escapeAttr(item.description)}">
             ${this.escapeHtml(item.description)}
           </td>
@@ -973,13 +790,10 @@ const TableController = {
     });
 
     this.tableBody.innerHTML = html;
-
-    // Attach row action listeners
     this.attachRowEvents(items);
   },
 
   attachRowEvents(currentItems) {
-    // View JSON Modal
     this.tableBody.querySelectorAll('.btn-view-json').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.getAttribute('data-index'), 10);
@@ -996,20 +810,18 @@ const TableController = {
       });
     });
 
-    // Copy Row JSON
     this.tableBody.querySelectorAll('.btn-copy-row').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.getAttribute('data-index'), 10);
         const item = currentItems[idx];
         if (item) {
           navigator.clipboard.writeText(JSON.stringify(item.rawResponse || item, null, 2)).then(() => {
-            ToastService.show('Copied!', 'Item response payload copied to clipboard', 'info', 2000);
+            ToastService.show('Copied!', 'JSON payload copied to clipboard', 'info', 2000);
           });
         }
       });
     });
 
-    // Delete Single Row
     this.tableBody.querySelectorAll('.btn-delete-row').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
@@ -1017,18 +829,18 @@ const TableController = {
         StorageManager.saveSubmissions();
         this.render();
         MetricsController.render();
-        ToastService.show('Deleted', `Record #${id} removed.`, 'info', 2000);
+        ToastService.show('Deleted', `Record #${id} removed`, 'info', 2000);
       });
     });
   },
 
   exportCsv() {
     if (AppState.submissions.length === 0) {
-      ToastService.show('Export Empty', 'No submissions to export', 'warning', 2000);
+      ToastService.show('Export Empty', 'No records to export', 'warning', 2000);
       return;
     }
 
-    const headers = ['ID', 'Timestamp', 'API Source', 'Title', 'Category', 'Price/Value', 'Brand/Author', 'Description', 'Status Code', 'Latency (ms)'];
+    const headers = ['ID', 'Timestamp', 'API Source', 'Title', 'Category', 'User ID', 'Author/Tag', 'Description', 'Status Code', 'Latency (ms)'];
     const rows = AppState.submissions.map(item => [
       item.id,
       `"${item.timestamp}"`,
@@ -1046,7 +858,7 @@ const TableController = {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `novapost_api_records_${Date.now()}.csv`);
+    link.setAttribute('download', `api_records_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1056,7 +868,7 @@ const TableController = {
 
   exportJson() {
     if (AppState.submissions.length === 0) {
-      ToastService.show('Export Empty', 'No submissions to export', 'warning', 2000);
+      ToastService.show('Export Empty', 'No records to export', 'warning', 2000);
       return;
     }
 
@@ -1065,13 +877,13 @@ const TableController = {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `novapost_api_records_${Date.now()}.json`);
+    link.setAttribute('download', `api_records_${Date.now()}.json`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    ToastService.show('JSON Exported', 'Downloaded submissions raw JSON', 'success', 2500);
+    ToastService.show('JSON Exported', 'Downloaded submissions JSON', 'success', 2500);
   },
 
   escapeHtml(str) {
@@ -1129,16 +941,13 @@ const ModalController = {
   guideModal: document.getElementById('guideModal'),
 
   init() {
-    // Response Modal Close
     document.getElementById('btnCloseModal').addEventListener('click', () => this.closeResponseModal());
     document.getElementById('btnCloseModalBottom').addEventListener('click', () => this.closeResponseModal());
 
-    // Guide Modal Open/Close
     document.getElementById('guideBtn').addEventListener('click', () => this.openGuideModal());
     document.getElementById('btnCloseGuideModal').addEventListener('click', () => this.closeGuideModal());
     document.getElementById('btnCloseGuideBottom').addEventListener('click', () => this.closeGuideModal());
 
-    // Copy modal content
     this.btnCopyModalJson.addEventListener('click', () => {
       const text = this.modalJsonContent.textContent;
       navigator.clipboard.writeText(text).then(() => {
@@ -1146,7 +955,6 @@ const ModalController = {
       });
     });
 
-    // Close on backdrop click
     [this.responseModal, this.guideModal].forEach(modal => {
       modal.addEventListener('click', (e) => {
         if (e.target === modal) {
@@ -1156,7 +964,6 @@ const ModalController = {
       });
     });
 
-    // Close on Escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.closeResponseModal();
@@ -1217,8 +1024,7 @@ document.addEventListener('DOMContentLoaded', () => {
   TableController.init();
   MetricsController.render();
 
-  // Welcome toast
   setTimeout(() => {
-    ToastService.show('NovaPost Ready', 'Connected to public POST REST endpoints.', 'info', 3000);
+    ToastService.show('NovaPost Ready', 'Connected to public POST REST API.', 'info', 3000);
   }, 500);
 });

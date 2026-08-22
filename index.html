@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NovaPost — Public REST API POST Portal & Data Manager</title>
-  <meta name="description" content="A modern, high-performance web application to submit POST requests to public REST APIs and visualize responses in an interactive data table." />
+  <meta name="description" content="A modern web application to submit POST requests to public REST APIs and visualize real responses in an interactive data table." />
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -38,7 +38,7 @@
       <div class="header-actions">
         <div class="api-status-indicator" title="API Status: Online">
           <span class="status-dot online"></span>
-          <span class="status-label" id="currentEndpointLabel">DummyJSON API</span>
+          <span class="status-label" id="currentEndpointLabel">Posts API</span>
         </div>
 
         <button id="guideBtn" class="btn btn-secondary btn-sm" title="View Architecture & HTTP Guide">
@@ -117,15 +117,15 @@
           <div class="endpoint-selector-wrapper">
             <label for="apiSelect" class="sr-only">Select API</label>
             <select id="apiSelect" class="custom-select">
-              <option value="dummyjson">DummyJSON (/products/add)</option>
-              <option value="jsonplaceholder">JSONPlaceholder (/posts)</option>
-              <option value="dummyjson_posts">DummyJSON (/posts/add)</option>
+              <option value="posts">JSONPlaceholder (/posts)</option>
+              <option value="comments">JSONPlaceholder (/comments)</option>
+              <option value="todos">JSONPlaceholder (/todos)</option>
             </select>
           </div>
         </div>
 
         <p class="card-desc">
-          Fill out the fields below to dispatch a validated <code>POST</code> payload with <code>Content-Type: application/json</code>.
+          Fill out the form to dispatch a live <code>POST</code> request with <code>Content-Type: application/json</code>.
         </p>
 
         <form id="postApiForm" novalidate>
@@ -133,7 +133,7 @@
           <!-- Field 1: Title / Name -->
           <div class="form-group" id="groupTitle">
             <label for="inputTitle" class="form-label">
-              <span id="labelTitle">Resource Title / Product Name</span>
+              <span id="labelTitle">Resource Title / Headline</span>
               <span class="required-star">*</span>
             </label>
             <div class="input-wrapper">
@@ -143,7 +143,7 @@
                 id="inputTitle" 
                 name="title" 
                 class="form-control" 
-                placeholder="e.g. Wireless Noise-Cancelling Headphones" 
+                placeholder="Enter title (e.g. Asynchronous JavaScript Mastery)" 
                 required 
                 minlength="3"
                 maxlength="120"
@@ -152,58 +152,56 @@
             <span class="form-hint" id="hintTitle">Must be at least 3 characters.</span>
           </div>
 
-          <!-- Dynamic Row: Category & Value/Price -->
+          <!-- Dynamic Row: Category & UserID/Value -->
           <div class="form-row">
-            <!-- Field 2: Category / Role -->
+            <!-- Field 2: Category -->
             <div class="form-group" id="groupCategory">
               <label for="inputCategory" class="form-label">
-                <span id="labelCategory">Category / Department</span>
+                <span id="labelCategory">Category / Topic</span>
                 <span class="required-star">*</span>
               </label>
               <div class="input-wrapper">
                 <i class="fa-solid fa-layer-group input-icon"></i>
                 <select id="inputCategory" name="category" class="form-control" required>
                   <option value="">-- Choose Category --</option>
-                  <option value="electronics">Electronics & Tech</option>
-                  <option value="audio">Audio & Gadgets</option>
-                  <option value="home">Home & Living</option>
-                  <option value="fashion">Apparel & Fashion</option>
-                  <option value="productivity">Software & Tools</option>
-                  <option value="general">General</option>
+                  <option value="Technology">Technology & Software</option>
+                  <option value="Design">Design & UI/UX</option>
+                  <option value="Business">Business & Management</option>
+                  <option value="Education">Education & Research</option>
+                  <option value="General">General</option>
                 </select>
               </div>
-              <span class="form-hint">Select a relevant category.</span>
+              <span class="form-hint">Select a category.</span>
             </div>
 
-            <!-- Field 3: Numerical Value (Price / UserID) -->
+            <!-- Field 3: Numerical Identifier (User ID / Post ID) -->
             <div class="form-group" id="groupValue">
               <label for="inputValue" class="form-label">
-                <span id="labelValue">Price ($ USD)</span>
+                <span id="labelValue">User ID (1-100)</span>
                 <span class="required-star">*</span>
               </label>
               <div class="input-wrapper">
-                <i class="fa-solid fa-tag input-icon" id="iconValue"></i>
+                <i class="fa-solid fa-user input-icon" id="iconValue"></i>
                 <input 
                   type="number" 
                   id="inputValue" 
                   name="value" 
                   class="form-control" 
-                  placeholder="e.g. 199.99" 
-                  step="0.01" 
-                  min="0.01" 
-                  max="100000"
+                  placeholder="e.g. 1" 
+                  min="1" 
+                  max="1000"
                   required 
                 />
               </div>
-              <span class="form-hint" id="hintValue">Enter a valid positive number.</span>
+              <span class="form-hint" id="hintValue">Enter a valid ID number.</span>
             </div>
           </div>
 
-          <!-- Field 4: Tag / Brand / Job Title -->
+          <!-- Field 4: Tag / Author / Email -->
           <div class="form-row">
             <div class="form-group" id="groupBrand">
               <label for="inputBrand" class="form-label">
-                <span id="labelBrand">Brand / Author / Tag</span>
+                <span id="labelBrand">Author / Tag</span>
               </label>
               <div class="input-wrapper">
                 <i class="fa-solid fa-feather-pointed input-icon"></i>
@@ -212,37 +210,37 @@
                   id="inputBrand" 
                   name="brand" 
                   class="form-control" 
-                  placeholder="e.g. NovaTech Labs" 
+                  placeholder="e.g. Alex Rivera" 
                   maxlength="60"
                 />
               </div>
-              <span class="form-hint">Identifier or attribution tag.</span>
+              <span class="form-hint">Author or attribution tag.</span>
             </div>
 
             <div class="form-group" id="groupRating">
               <label for="inputRating" class="form-label">
-                <span id="labelRating">Stock / Rating Score</span>
+                <span id="labelRating">Priority / Reading Minutes</span>
               </label>
               <div class="input-wrapper">
-                <i class="fa-solid fa-star input-icon"></i>
+                <i class="fa-solid fa-clock input-icon"></i>
                 <input 
                   type="number" 
                   id="inputRating" 
                   name="rating" 
                   class="form-control" 
-                  placeholder="e.g. 85" 
+                  placeholder="e.g. 5" 
                   min="1" 
-                  max="10000"
+                  max="100"
                 />
               </div>
-              <span class="form-hint">Inventory quantity or score.</span>
+              <span class="form-hint">Estimated minutes or priority level.</span>
             </div>
           </div>
 
           <!-- Field 5: Description / Body -->
           <div class="form-group" id="groupDescription">
             <label for="inputDescription" class="form-label">
-              <span id="labelDescription">Detailed Description / Content Body</span>
+              <span id="labelDescription">Content Body / Description</span>
               <span class="required-star">*</span>
             </label>
             <div class="input-wrapper">
@@ -251,25 +249,20 @@
                 name="description" 
                 class="form-control textarea-control" 
                 rows="3" 
-                placeholder="Write a concise overview, specifications, or body text for this resource..." 
+                placeholder="Enter detailed content or description for this submission..." 
                 required 
-                minlength="10"
+                minlength="5"
                 maxlength="500"
               ></textarea>
             </div>
             <div class="field-meta">
-              <span class="form-hint">Provide at least 10 characters.</span>
+              <span class="form-hint">Provide at least 5 characters.</span>
               <span class="char-counter" id="charCounter">0 / 500</span>
             </div>
           </div>
 
-          <!-- Quick Action Buttons -->
+          <!-- Action Buttons -->
           <div class="form-quick-actions">
-            <button type="button" id="btnFillSample" class="btn btn-outline btn-sm">
-              <i class="fa-solid fa-wand-magic-sparkles"></i>
-              <span>Fill Sample Data</span>
-            </button>
-
             <button type="button" id="btnPreviewPayload" class="btn btn-outline btn-sm">
               <i class="fa-solid fa-code"></i>
               <span>Preview Payload</span>
@@ -277,7 +270,7 @@
 
             <button type="button" id="btnResetForm" class="btn btn-ghost btn-sm text-muted">
               <i class="fa-solid fa-rotate-left"></i>
-              <span>Clear</span>
+              <span>Clear Form</span>
             </button>
           </div>
 
@@ -313,7 +306,7 @@
             </div>
             <div class="terminal-url">
               <span class="method-badge">POST</span>
-              <span class="url-text" id="terminalUrl">https://dummyjson.com/products/add</span>
+              <span class="url-text" id="terminalUrl">https://jsonplaceholder.typicode.com/posts</span>
             </div>
           </div>
 
@@ -326,9 +319,9 @@
               <pre class="code-block"><code id="terminalRequestBody">{
   "Content-Type": "application/json",
   "payload": {
-    "title": "Awaiting form input...",
-    "category": "...",
-    "price": 0
+    "title": "",
+    "body": "",
+    "userId": 1
   }
 }</code></pre>
             </div>
@@ -365,7 +358,7 @@
             <h2>Submitted API Records</h2>
             <span class="badge badge-count" id="tableRecordCount">0 records</span>
           </div>
-          <p class="section-subtitle">Real-time table populated by successful <code>POST</code> API responses with persistence.</p>
+          <p class="section-subtitle">Real-time table populated by live <code>POST</code> API responses.</p>
         </div>
 
         <div class="table-toolbar">
@@ -382,12 +375,11 @@
           <div class="filter-box">
             <select id="tableCategoryFilter" class="custom-select filter-select">
               <option value="ALL">All Categories</option>
-              <option value="electronics">Electronics</option>
-              <option value="audio">Audio</option>
-              <option value="home">Home</option>
-              <option value="fashion">Fashion</option>
-              <option value="productivity">Software</option>
-              <option value="general">General</option>
+              <option value="Technology">Technology</option>
+              <option value="Design">Design</option>
+              <option value="Business">Business</option>
+              <option value="Education">Education</option>
+              <option value="General">General</option>
             </select>
           </div>
 
@@ -403,7 +395,7 @@
               <span>JSON</span>
             </button>
 
-            <button id="btnClearHistory" class="btn btn-danger-ghost btn-sm" title="Clear all local submissions">
+            <button id="btnClearHistory" class="btn btn-danger-ghost btn-sm" title="Clear all submissions">
               <i class="fa-solid fa-trash-can"></i>
               <span>Clear</span>
             </button>
@@ -433,11 +425,11 @@
                 <i class="fa-solid fa-sort sort-icon"></i>
               </th>
               <th data-sort="price" class="sortable">
-                <span>Price / Value</span>
+                <span>User / Author ID</span>
                 <i class="fa-solid fa-sort sort-icon"></i>
               </th>
               <th>
-                <span>Summary / Description</span>
+                <span>Description / Body</span>
               </th>
               <th data-sort="status" class="sortable">
                 <span>Status</span>
@@ -449,21 +441,17 @@
             </tr>
           </thead>
           <tbody id="tableBody">
-            <!-- Populated via JavaScript -->
+            <!-- Populated via JavaScript on user submission -->
           </tbody>
         </table>
 
         <!-- Empty State Message -->
-        <div id="tableEmptyState" class="empty-state hidden">
+        <div id="tableEmptyState" class="empty-state">
           <div class="empty-icon">
             <i class="fa-solid fa-box-open"></i>
           </div>
-          <h3>No API Submissions Found</h3>
-          <p>Submit your first resource above or click "Fill Sample Data" to make a live POST request.</p>
-          <button id="btnEmptySample" class="btn btn-primary btn-sm">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <span>Load Sample & Submit</span>
-          </button>
+          <h3>No API Submissions Yet</h3>
+          <p>Fill out the form above and click "Send POST Request" to submit real data to the live REST API.</p>
         </div>
       </div>
     </section>
@@ -494,7 +482,7 @@
         </div>
         <div class="modal-meta-item">
           <span class="meta-label">API Source:</span>
-          <span class="meta-val" id="modalApiSource">DummyJSON</span>
+          <span class="meta-val" id="modalApiSource">JSONPlaceholder</span>
         </div>
       </div>
 
@@ -534,7 +522,7 @@
         <section class="guide-section">
           <h4><i class="fa-solid fa-diagram-project"></i> 1. The HTTP POST Lifecycle</h4>
           <p>
-            A <code>POST</code> request is designed to submit an entity to the specified resource, often causing a change in state or side effects on the server.
+            A <code>POST</code> request is designed to submit an entity to the specified resource, causing the creation of a new entry on the server.
           </p>
           <div class="flow-steps">
             <div class="flow-step">
@@ -582,7 +570,7 @@ async function submitData(url, data) {
     }
 
     const result = await response.json();
-    return result; // contains server-generated ID, timestamp, etc.
+    return result; // contains server-generated ID
   } catch (error) {
     console.error('API POST Failed:', error);
     throw error;
@@ -596,13 +584,13 @@ async function submitData(url, data) {
             <li><strong>201 Created:</strong> The request succeeded and a new resource was created on the server (Standard POST success).</li>
             <li><strong>200 OK:</strong> Standard successful response for REST operations.</li>
             <li><strong>400 Bad Request:</strong> Client sent invalid or malformed data.</li>
-            <li><strong>CORS & Security:</strong> Public mock APIs (DummyJSON, JSONPlaceholder) provide wildcard <code>Access-Control-Allow-Origin: *</code> headers allowing browser client access.</li>
+            <li><strong>CORS & Security:</strong> Public REST APIs provide <code>Access-Control-Allow-Origin: *</code> headers allowing browser client access.</li>
           </ul>
         </section>
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-primary" id="btnCloseGuideBottom">Got it, Let's Build!</button>
+        <button class="btn btn-primary" id="btnCloseGuideBottom">Close Guide</button>
       </div>
     </div>
   </div>

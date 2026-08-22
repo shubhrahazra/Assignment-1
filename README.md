@@ -1,7 +1,7 @@
 # ⚡ NovaPost — Public REST API POST Portal & Tabular Data Manager
 
 > **Assignment 1**: Public POST API + Form + Tabular Data  
-> Built strictly using **Plain HTML5, CSS3 (Vanilla), and Modern JavaScript (ES6+)**. No heavy frameworks, no external CSS libraries.
+> Built strictly using **Plain HTML5, CSS3 (Vanilla), and Modern JavaScript (ES6+)**. No frameworks, no external CSS libraries.
 
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
 [![Vanilla CSS](https://img.shields.io/badge/CSS3-Vanilla-1572B6?style=flat&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
@@ -14,7 +14,7 @@
 
 NovaPost is a high-performance web application designed to demonstrate the complete lifecycle of **HTTP POST requests** to public REST APIs. It provides:
 1. **Dynamic Input Validation**: Validates payloads on the client-side with real-time feedback and character counters.
-2. **Multi-Endpoint Support**: Seamlessly switches between public mock endpoints (`DummyJSON Products`, `JSONPlaceholder Posts`, and `ReqRes Users`).
+2. **Multi-Endpoint Support**: Connects to public REST endpoints (`JSONPlaceholder Posts`, `JSONPlaceholder Comments`, and `JSONPlaceholder Todos`).
 3. **Live Request & Response Inspector**: Visualizes request headers, serialized JSON payload, status codes, latency timings, and returned payloads in a terminal interface.
 4. **Interactive Data Table**: Renders server-assigned attributes dynamically with live multi-field search, category filtering, column sorting, JSON inspection modals, CSV export, and persistent storage.
 5. **Aesthetic Excellence**: Premium glassmorphism design with responsive CSS Grid/Flexbox, fluid typography (`Plus Jakarta Sans` & `JetBrains Mono`), and Dark/Light mode toggle.
@@ -25,9 +25,9 @@ NovaPost is a high-performance web application designed to demonstrate the compl
 
 | Provider | Endpoint | Method | Payload Sample | Response Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **DummyJSON** | `https://dummyjson.com/products/add` | `POST` | `{"title":"...","price":199.99,"category":"audio"}` | `201 Created` |
-| **JSONPlaceholder** | `https://jsonplaceholder.typicode.com/posts` | `POST` | `{"title":"...","body":"...","userId":1}` | `201 Created` |
-| **ReqRes** | `https://reqres.in/api/users` | `POST` | `{"name":"...","job":"..."}` | `201 Created` |
+| **JSONPlaceholder (Posts)** | `https://jsonplaceholder.typicode.com/posts` | `POST` | `{"title":"...","body":"...","userId":1}` | `201 Created` |
+| **JSONPlaceholder (Comments)** | `https://jsonplaceholder.typicode.com/comments` | `POST` | `{"name":"...","body":"...","email":"...","postId":1}` | `201 Created` |
+| **JSONPlaceholder (Todos)** | `https://jsonplaceholder.typicode.com/todos` | `POST` | `{"title":"...","completed":false,"userId":1}` | `201 Created` |
 
 ---
 
@@ -42,7 +42,7 @@ sequenceDiagram
     participant Storage as LocalStorage
     participant API as Public REST API Server
 
-    User->>UI: Enters data or clicks "Fill Sample Data"
+    User->>UI: Enters form input fields
     UI->>Engine: Captures input & validates constraints
     Engine->>UI: Updates Live Terminal JSON Preview
     User->>UI: Clicks "Send POST Request"
@@ -60,14 +60,13 @@ sequenceDiagram
 ## ✨ Key Features
 
 - **Pure Vanilla Stack**: Zero npm build dependencies required. Runs natively in any modern browser.
-- **1-Click Sample Pre-filling**: Instant realistic sample generation for swift testing without tedious manual typing.
 - **Live Terminal Inspector**: Real-time inspection of headers (`Content-Type: application/json; charset=UTF-8`), request body, and response payload.
 - **Tabular Data Operations**:
   - **Live Search**: Instant substring search across Title, Category, Description, and ID.
-  - **Filter**: Narrow records by product/topic category.
-  - **Sort**: Click column headers (ID, Timestamp, Title, Price, Status) to toggle Ascending/Descending.
+  - **Filter**: Narrow records by category.
+  - **Sort**: Click column headers (ID, Timestamp, Title, User ID, Status) to toggle Ascending/Descending.
   - **Data Inspection**: Open modal with syntax-highlighted raw JSON and copy-to-clipboard.
-  - **Exporting**: Export entire history to downloadable `.csv` spreadsheet or `.json` file.
+  - **Exporting**: Export table history to downloadable `.csv` spreadsheet or `.json` file.
 - **Dark & Light Mode**: Smooth theme transitions persisted in `localStorage`.
 - **Educational Guide Modal**: Built-in interactive architectural walkthrough of HTTP POST mechanics, status codes, and `async/await`.
 
@@ -75,22 +74,14 @@ sequenceDiagram
 
 ## 💻 How to Run Locally
 
-Because this project is built with standard Web APIs (HTML5/CSS3/Vanilla JS), no compilation step is needed:
-
 ### Option 1: Using Python's Built-in Server (Recommended)
 ```bash
-# In the project root directory
-python -m http.server 8000
+python -m http.server 8080
 ```
-Then open: `http://localhost:8000`
+Then open: `http://localhost:8080`
 
-### Option 2: Using Node.js `npx serve` / `http-server`
-```bash
-npx serve .
-```
-
-### Option 3: Direct File Opening
-Simply double-click `index.html` or open it directly in Chrome, Edge, Safari, or Firefox.
+### Option 2: Direct File Opening
+Simply double-click `index.html` or open it directly in Chrome, Edge, or Firefox.
 
 ---
 
@@ -106,59 +97,11 @@ d:\Project\Assignment 1/
 
 ---
 
-## 🛠️ Code Explanation
-
-### 1. Asynchronous POST Request with Fetch API
-```javascript
-async function submitData(url, data) {
-  try {
-    const startTime = performance.now();
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(data)
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const responseData = await response.json();
-    const latency = Math.round(performance.now() - startTime);
-    return { data: responseData, latency, status: response.status };
-  } catch (error) {
-    console.error('API POST Failed:', error);
-    throw error;
-  }
-}
-```
-
-### 2. Client-Side Validation & Table Rendering
-Inputs are validated with HTML5 constraints and JavaScript `checkValidity()` before any network dispatch. When successful, the returned response is normalized and injected into the responsive DOM table with XSS-safe text escaping.
-
----
-
 ## 📦 Pushing to GitHub
 
-To commit and push this assignment to your repository:
-
 ```bash
-# 1. Initialize git (if not already done)
-git init
-
-# 2. Add remote repository
-git remote add origin https://github.com/shubhrahazra/Assignment-1.git
-
-# 3. Stage all files
 git add .
-
-# 4. Commit changes
-git commit -m "feat: complete assignment 1 public POST API portal with modern form and table"
-
-# 5. Push to main branch
+git commit -m "feat: complete assignment 1 with public POST API, modern form, and interactive table"
 git branch -M main
 git push -u origin main
 ```
