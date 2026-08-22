@@ -26,22 +26,22 @@ const API_CONFIG = {
       descLabel: 'Post Content / Body'
     },
     formatPayload: (form) => ({
-      title: form.title.trim(),
-      body: form.description.trim(),
+      title: (form.title || '').trim(),
+      body: (form.description || '').trim(),
       userId: parseInt(form.value, 10) || 1
     }),
     normalizeResponse: (res, inputData, latency, statusCode) => ({
       id: res.id || 101,
       timestamp: new Date().toISOString(),
       apiSource: 'JSONPlaceholder (Posts)',
-      title: res.title || inputData.title,
+      title: res.title || inputData.title || 'Untitled Post',
       category: inputData.category || 'General',
       price: inputData.value || 1,
       brand: inputData.brand || 'Author',
       rating: inputData.rating || 5,
-      description: res.body || inputData.description,
+      description: res.body || inputData.description || '',
       statusCode: statusCode || 201,
-      latency: latency,
+      latency: latency || 1,
       rawResponse: res
     })
   },
@@ -64,23 +64,23 @@ const API_CONFIG = {
       descLabel: 'Comment Body / Content'
     },
     formatPayload: (form) => ({
-      name: form.title.trim(),
+      name: (form.title || '').trim(),
       email: form.brand ? form.brand.trim() : 'user@example.com',
-      body: form.description.trim(),
+      body: (form.description || '').trim(),
       postId: parseInt(form.value, 10) || 1
     }),
     normalizeResponse: (res, inputData, latency, statusCode) => ({
       id: res.id || 501,
       timestamp: new Date().toISOString(),
       apiSource: 'JSONPlaceholder (Comments)',
-      title: res.name || inputData.title,
+      title: res.name || inputData.title || 'Untitled Comment',
       category: inputData.category || 'General',
       price: inputData.value || 1,
       brand: res.email || inputData.brand || 'User',
       rating: inputData.rating || 5,
-      description: res.body || inputData.description,
+      description: res.body || inputData.description || '',
       statusCode: statusCode || 201,
-      latency: latency,
+      latency: latency || 1,
       rawResponse: res
     })
   },
@@ -103,7 +103,7 @@ const API_CONFIG = {
       descLabel: 'Task Requirements & Details'
     },
     formatPayload: (form) => ({
-      title: form.title.trim(),
+      title: (form.title || '').trim(),
       completed: false,
       userId: parseInt(form.value, 10) || 1
     }),
@@ -111,20 +111,20 @@ const API_CONFIG = {
       id: res.id || 201,
       timestamp: new Date().toISOString(),
       apiSource: 'JSONPlaceholder (Todos)',
-      title: res.title || inputData.title,
+      title: res.title || inputData.title || 'Untitled Task',
       category: inputData.category || 'General',
       price: inputData.value || 1,
       brand: inputData.brand || 'Team',
       rating: inputData.rating || 1,
       description: inputData.description || 'Task created successfully',
       statusCode: statusCode || 201,
-      latency: latency,
+      latency: latency || 1,
       rawResponse: res
     })
   }
 };
 
-// Initial state (Starts 100% clean without mock entries)
+// Initial State
 const AppState = {
   currentApi: 'posts',
   submissions: [],
@@ -147,24 +147,18 @@ const AppState = {
 
 const StorageManager = {
   KEYS: {
-    SUBMISSIONS: 'novapost_submissions_clean_v2',
-    METRICS: 'novapost_metrics_clean_v2',
-    THEME: 'novapost_theme_clean_v2',
-    API_CHOICE: 'novapost_api_choice_clean_v2'
+    SUBMISSIONS: 'novapost_submissions_clean_v3',
+    METRICS: 'novapost_metrics_clean_v3',
+    THEME: 'novapost_theme_clean_v3',
+    API_CHOICE: 'novapost_api_choice_clean_v3'
   },
 
   init() {
-    // Clear any outdated legacy keys
-    try {
-      localStorage.removeItem('novapost_submissions_v1');
-      localStorage.removeItem('novapost_active_api_v1');
-    } catch (e) {}
-
     // Load Theme
     const savedTheme = localStorage.getItem(this.KEYS.THEME) || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
 
-    // Load API Choice with safety check
+    // Load API Choice safely
     const savedApi = localStorage.getItem(this.KEYS.API_CHOICE);
     if (savedApi && API_CONFIG[savedApi]) {
       AppState.currentApi = savedApi;
@@ -231,10 +225,9 @@ const StorageManager = {
 // ============================================================================
 
 const ToastService = {
-  container: document.getElementById('toastContainer'),
-
   show(title, message, type = 'info', durationMs = 4000) {
-    if (!this.container) return;
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
 
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
@@ -252,7 +245,7 @@ const ToastService = {
       </div>
     `;
 
-    this.container.appendChild(toast);
+    container.appendChild(toast);
 
     setTimeout(() => {
       toast.classList.add('toast-exit');
@@ -279,7 +272,6 @@ const ToastService = {
 
 const ApiClient = {
   async sendPost(endpointKey, formData) {
-    // Safe fallback if key is invalid
     const activeKey = API_CONFIG[endpointKey] ? endpointKey : 'posts';
     const config = API_CONFIG[activeKey];
 
@@ -290,7 +282,7 @@ const ApiClient = {
     const startTime = performance.now();
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     try {
       const response = await fetch(url, {
@@ -329,7 +321,7 @@ const ApiClient = {
       const latency = Math.max(1, Math.round(endTime - startTime));
 
       if (error.name === 'AbortError') {
-        throw new Error('Request timed out (6s). Please check your internet connection.');
+        throw new Error('Request timed out after 8s. Please check your internet connection.');
       }
       throw error;
     }
@@ -341,55 +333,56 @@ const ApiClient = {
 // ============================================================================
 
 const FormController = {
-  form: document.getElementById('postApiForm'),
-  apiSelect: document.getElementById('apiSelect'),
-  titleInput: document.getElementById('inputTitle'),
-  categoryInput: document.getElementById('inputCategory'),
-  valueInput: document.getElementById('inputValue'),
-  brandInput: document.getElementById('inputBrand'),
-  ratingInput: document.getElementById('inputRating'),
-  descInput: document.getElementById('inputDescription'),
-  charCounter: document.getElementById('charCounter'),
-  submitBtn: document.getElementById('btnSubmit'),
-  submitText: document.getElementById('btnSubmitText'),
-
-  // Labels
-  labelTitle: document.getElementById('labelTitle'),
-  labelCategory: document.getElementById('labelCategory'),
-  labelValue: document.getElementById('labelValue'),
-  labelBrand: document.getElementById('labelBrand'),
-  labelRating: document.getElementById('labelRating'),
-  labelDesc: document.getElementById('labelDescription'),
-  iconValue: document.getElementById('iconValue'),
-
-  // Terminal
-  terminalUrl: document.getElementById('terminalUrl'),
-  terminalReqBody: document.getElementById('terminalRequestBody'),
-  terminalRespStatus: document.getElementById('terminalResponseStatus'),
-  terminalRespBody: document.getElementById('terminalResponseBody'),
-  terminalLatency: document.getElementById('terminalLatency'),
-  terminalTimestamp: document.getElementById('terminalTimestamp'),
-  currentEndpointLabel: document.getElementById('currentEndpointLabel'),
-
   init() {
+    // Query elements inside init after DOM is fully ready
+    this.form = document.getElementById('postApiForm');
+    this.apiSelect = document.getElementById('apiSelect');
+    this.titleInput = document.getElementById('inputTitle');
+    this.categoryInput = document.getElementById('inputCategory');
+    this.valueInput = document.getElementById('inputValue');
+    this.brandInput = document.getElementById('inputBrand');
+    this.ratingInput = document.getElementById('inputRating');
+    this.descInput = document.getElementById('inputDescription');
+    this.charCounter = document.getElementById('charCounter');
+    this.submitBtn = document.getElementById('btnSubmit');
+    this.submitText = document.getElementById('btnSubmitText');
+
+    this.labelTitle = document.getElementById('labelTitle');
+    this.labelCategory = document.getElementById('labelCategory');
+    this.labelValue = document.getElementById('labelValue');
+    this.labelBrand = document.getElementById('labelBrand');
+    this.labelRating = document.getElementById('labelRating');
+    this.labelDesc = document.getElementById('labelDescription');
+    this.iconValue = document.getElementById('iconValue');
+
+    this.terminalUrl = document.getElementById('terminalUrl');
+    this.terminalReqBody = document.getElementById('terminalRequestBody');
+    this.terminalRespStatus = document.getElementById('terminalResponseStatus');
+    this.terminalRespBody = document.getElementById('terminalResponseBody');
+    this.terminalLatency = document.getElementById('terminalLatency');
+    this.terminalTimestamp = document.getElementById('terminalTimestamp');
+    this.currentEndpointLabel = document.getElementById('currentEndpointLabel');
+
+    if (!this.form) return;
+
     this.updateEndpointUi(AppState.currentApi);
     this.bindEvents();
     this.updateLivePayload();
   },
 
   bindEvents() {
-    // API Dropdown Switch
-    this.apiSelect.value = AppState.currentApi;
-    this.apiSelect.addEventListener('change', (e) => {
-      AppState.currentApi = e.target.value;
-      StorageManager.saveApiChoice(e.target.value);
-      this.updateEndpointUi(e.target.value);
-      this.updateLivePayload();
-      ToastService.show('API Endpoint Selected', `${API_CONFIG[e.target.value].name}`, 'info', 2500);
-    });
+    if (this.apiSelect) {
+      this.apiSelect.value = AppState.currentApi;
+      this.apiSelect.addEventListener('change', (e) => {
+        AppState.currentApi = e.target.value;
+        StorageManager.saveApiChoice(e.target.value);
+        this.updateEndpointUi(e.target.value);
+        this.updateLivePayload();
+        ToastService.show('API Endpoint Selected', `${API_CONFIG[e.target.value]?.name || 'REST API'}`, 'info', 2500);
+      });
+    }
 
-    // Input changes for live preview
-    const inputs = [this.titleInput, this.categoryInput, this.valueInput, this.brandInput, this.ratingInput, this.descInput];
+    const inputs = [this.titleInput, this.categoryInput, this.valueInput, this.brandInput, this.ratingInput, this.descInput].filter(Boolean);
     inputs.forEach(input => {
       input.addEventListener('input', () => {
         this.updateLivePayload();
@@ -397,71 +390,70 @@ const FormController = {
       });
     });
 
-    // Character counter
-    this.descInput.addEventListener('input', () => {
-      const len = this.descInput.value.length;
-      this.charCounter.textContent = `${len} / 500`;
-      if (len > 500) {
-        this.charCounter.style.color = 'var(--danger)';
-      } else {
-        this.charCounter.style.color = 'var(--text-muted)';
-      }
-    });
-
-    // Preview Payload
-    document.getElementById('btnPreviewPayload').addEventListener('click', () => {
-      const formData = this.getFormData();
-      const config = API_CONFIG[AppState.currentApi];
-      const payload = config.formatPayload(formData);
-      ModalController.openResponseModal(
-        {
-          targetUrl: config.url,
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          payload: payload
-        },
-        'Payload Preview (Pre-dispatch)',
-        200,
-        0,
-        config.name
-      );
-    });
-
-    // Reset Form
-    document.getElementById('btnResetForm').addEventListener('click', () => this.resetForm());
-
-    // Copy Endpoint URL
-    document.getElementById('btnCopyEndpoint').addEventListener('click', () => {
-      const url = API_CONFIG[AppState.currentApi].url;
-      navigator.clipboard.writeText(url).then(() => {
-        ToastService.show('Copied!', 'Target API URL copied to clipboard', 'info', 2000);
+    if (this.descInput && this.charCounter) {
+      this.descInput.addEventListener('input', () => {
+        const len = this.descInput.value.length;
+        this.charCounter.textContent = `${len} / 500`;
+        this.charCounter.style.color = len > 500 ? 'var(--danger)' : 'var(--text-muted)';
       });
-    });
+    }
 
-    // Form Submit
+    const btnPreview = document.getElementById('btnPreviewPayload');
+    if (btnPreview) {
+      btnPreview.addEventListener('click', () => {
+        const formData = this.getFormData();
+        const config = API_CONFIG[AppState.currentApi] || API_CONFIG.posts;
+        const payload = config.formatPayload(formData);
+        ModalController.openResponseModal(
+          {
+            targetUrl: config.url,
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            payload: payload
+          },
+          'Payload Preview (Pre-dispatch)',
+          200,
+          0,
+          config.name
+        );
+      });
+    }
+
+    const btnReset = document.getElementById('btnResetForm');
+    if (btnReset) {
+      btnReset.addEventListener('click', () => this.resetForm());
+    }
+
+    const btnCopyUrl = document.getElementById('btnCopyEndpoint');
+    if (btnCopyUrl) {
+      btnCopyUrl.addEventListener('click', () => {
+        const config = API_CONFIG[AppState.currentApi] || API_CONFIG.posts;
+        navigator.clipboard.writeText(config.url).then(() => {
+          ToastService.show('Copied!', 'Target API URL copied to clipboard', 'info', 2000);
+        });
+      });
+    }
+
     this.form.addEventListener('submit', (e) => this.handleSubmit(e));
   },
 
   updateEndpointUi(apiId) {
-    const config = API_CONFIG[apiId];
-    if (!config) return;
+    const config = API_CONFIG[apiId] || API_CONFIG.posts;
 
-    this.terminalUrl.textContent = config.url;
-    if (this.currentEndpointLabel) {
-      this.currentEndpointLabel.textContent = config.name.replace('JSONPlaceholder ', '');
-    }
+    if (this.terminalUrl) this.terminalUrl.textContent = config.url;
+    if (this.currentEndpointLabel) this.currentEndpointLabel.textContent = config.name.replace('JSONPlaceholder ', '');
 
     const f = config.fields;
-    this.labelTitle.textContent = f.titleLabel;
-    this.titleInput.placeholder = f.titlePlaceholder;
-    this.labelCategory.textContent = f.categoryLabel;
-    this.labelValue.textContent = f.valueLabel;
-    this.valueInput.placeholder = f.valuePlaceholder;
-    this.labelBrand.textContent = f.brandLabel;
-    this.brandInput.placeholder = f.brandPlaceholder;
-    this.labelRating.textContent = f.ratingLabel;
-    this.ratingInput.placeholder = f.ratingPlaceholder;
-    this.labelDesc.textContent = f.descLabel;
+    if (this.labelTitle && f.titleLabel) this.labelTitle.textContent = f.titleLabel;
+    if (this.titleInput && f.titlePlaceholder) this.titleInput.placeholder = f.titlePlaceholder;
+    if (this.labelCategory && f.categoryLabel) this.labelCategory.textContent = f.categoryLabel;
+    if (this.labelValue && f.valueLabel) this.labelValue.textContent = f.valueLabel;
+    if (this.valueInput && f.valuePlaceholder) this.valueInput.placeholder = f.valuePlaceholder;
+    if (this.labelBrand && f.brandLabel) this.labelBrand.textContent = f.brandLabel;
+    if (this.brandInput && f.brandPlaceholder) this.brandInput.placeholder = f.brandPlaceholder;
+    if (this.labelRating && f.ratingLabel) this.labelRating.textContent = f.ratingLabel;
+    if (this.ratingInput && f.ratingPlaceholder) this.ratingInput.placeholder = f.ratingPlaceholder;
+    if (this.labelDesc && f.descLabel) this.labelDesc.textContent = f.descLabel;
 
     if (f.valueIcon && this.iconValue) {
       this.iconValue.className = `fa-solid ${f.valueIcon} input-icon`;
@@ -470,18 +462,18 @@ const FormController = {
 
   getFormData() {
     return {
-      title: this.titleInput.value,
-      category: this.categoryInput.value || 'General',
-      value: this.valueInput.value,
-      brand: this.brandInput.value,
-      rating: this.ratingInput.value,
-      description: this.descInput.value
+      title: this.titleInput ? this.titleInput.value : '',
+      category: this.categoryInput ? this.categoryInput.value || 'General' : 'General',
+      value: this.valueInput ? this.valueInput.value : '1',
+      brand: this.brandInput ? this.brandInput.value : '',
+      rating: this.ratingInput ? this.ratingInput.value : '5',
+      description: this.descInput ? this.descInput.value : ''
     };
   },
 
   updateLivePayload() {
     const formData = this.getFormData();
-    const config = API_CONFIG[AppState.currentApi];
+    const config = API_CONFIG[AppState.currentApi] || API_CONFIG.posts;
     const payload = config.formatPayload(formData);
 
     const fullPreview = {
@@ -494,10 +486,13 @@ const FormController = {
       body: payload
     };
 
-    this.terminalReqBody.textContent = JSON.stringify(fullPreview, null, 2);
+    if (this.terminalReqBody) {
+      this.terminalReqBody.textContent = JSON.stringify(fullPreview, null, 2);
+    }
   },
 
   validateField(input) {
+    if (!input) return true;
     if (!input.required && !input.value) {
       input.classList.remove('is-invalid', 'is-valid');
       return true;
@@ -516,7 +511,7 @@ const FormController = {
 
   validateForm() {
     let isValid = true;
-    const requiredInputs = [this.titleInput, this.categoryInput, this.valueInput, this.descInput];
+    const requiredInputs = [this.titleInput, this.categoryInput, this.valueInput, this.descInput].filter(Boolean);
 
     requiredInputs.forEach(input => {
       if (!this.validateField(input)) {
@@ -531,9 +526,9 @@ const FormController = {
   },
 
   resetForm() {
-    this.form.reset();
-    this.charCounter.textContent = '0 / 500';
-    [this.titleInput, this.categoryInput, this.valueInput, this.brandInput, this.ratingInput, this.descInput].forEach(el => {
+    if (this.form) this.form.reset();
+    if (this.charCounter) this.charCounter.textContent = '0 / 500';
+    [this.titleInput, this.categoryInput, this.valueInput, this.brandInput, this.ratingInput, this.descInput].filter(Boolean).forEach(el => {
       el.classList.remove('is-invalid', 'is-valid');
     });
     this.updateLivePayload();
@@ -541,41 +536,54 @@ const FormController = {
   },
 
   setLoading(isLoading) {
+    if (!this.submitBtn) return;
     if (isLoading) {
       this.submitBtn.classList.add('is-loading');
-      this.submitText.textContent = 'Sending POST...';
+      if (this.submitText) this.submitText.textContent = 'Sending POST...';
       this.submitBtn.disabled = true;
     } else {
       this.submitBtn.classList.remove('is-loading');
-      this.submitText.textContent = 'Send POST Request';
+      if (this.submitText) this.submitText.textContent = 'Send POST Request';
       this.submitBtn.disabled = false;
     }
   },
 
   async handleSubmit(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
 
     if (!this.validateForm()) {
       return;
     }
 
     const formData = this.getFormData();
-    const endpointKey = AppState.currentApi;
-    const config = API_CONFIG[endpointKey];
+    const endpointKey = AppState.currentApi || 'posts';
 
     this.setLoading(true);
-    this.terminalRespStatus.className = 'response-status-badge badge-warning';
-    this.terminalRespStatus.textContent = 'Processing...';
-    this.terminalResponseBody.textContent = '// Sending HTTP POST payload over network...';
+
+    if (this.terminalRespStatus) {
+      this.terminalRespStatus.className = 'response-status-badge badge-warning';
+      this.terminalRespStatus.textContent = 'Processing...';
+    }
+    if (this.terminalResponseBody) {
+      this.terminalResponseBody.textContent = '// Sending HTTP POST payload over network...';
+    }
 
     try {
       const result = await ApiClient.sendPost(endpointKey, formData);
 
-      this.terminalRespStatus.className = 'response-status-badge badge-success';
-      this.terminalRespStatus.textContent = `${result.statusCode} Created`;
-      this.terminalResponseBody.textContent = JSON.stringify(result.data, null, 2);
-      this.terminalLatency.textContent = `${result.latency} ms`;
-      this.terminalTimestamp.textContent = new Date().toLocaleTimeString();
+      if (this.terminalRespStatus) {
+        this.terminalRespStatus.className = 'response-status-badge badge-success';
+        this.terminalRespStatus.textContent = `${result.statusCode} Created`;
+      }
+      if (this.terminalResponseBody) {
+        this.terminalResponseBody.textContent = JSON.stringify(result.data, null, 2);
+      }
+      if (this.terminalLatency) {
+        this.terminalLatency.textContent = `${result.latency} ms`;
+      }
+      if (this.terminalTimestamp) {
+        this.terminalTimestamp.textContent = new Date().toLocaleTimeString();
+      }
 
       AppState.submissions.unshift(result.normalized);
       AppState.metrics.totalRequests++;
@@ -600,11 +608,19 @@ const FormController = {
     } catch (error) {
       console.error('Submission failed:', error);
 
-      this.terminalRespStatus.className = 'response-status-badge badge-danger';
-      this.terminalRespStatus.textContent = 'Failed';
-      this.terminalResponseBody.textContent = `// Error:\n${error.message}`;
-      this.terminalLatency.textContent = '-- ms';
-      this.terminalTimestamp.textContent = new Date().toLocaleTimeString();
+      if (this.terminalRespStatus) {
+        this.terminalRespStatus.className = 'response-status-badge badge-danger';
+        this.terminalRespStatus.textContent = 'Failed';
+      }
+      if (this.terminalResponseBody) {
+        this.terminalResponseBody.textContent = `// Error:\n${error.message}`;
+      }
+      if (this.terminalLatency) {
+        this.terminalLatency.textContent = '-- ms';
+      }
+      if (this.terminalTimestamp) {
+        this.terminalTimestamp.textContent = new Date().toLocaleTimeString();
+      }
 
       AppState.metrics.totalRequests++;
       StorageManager.saveMetrics();
@@ -622,74 +638,88 @@ const FormController = {
 // ============================================================================
 
 const TableController = {
-  tableBody: document.getElementById('tableBody'),
-  emptyState: document.getElementById('tableEmptyState'),
-  recordCount: document.getElementById('tableRecordCount'),
-  searchInput: document.getElementById('tableSearch'),
-  clearSearchBtn: document.getElementById('btnClearSearch'),
-  categoryFilter: document.getElementById('tableCategoryFilter'),
-  tableHeaders: document.querySelectorAll('.data-table th.sortable'),
-
   init() {
+    this.tableBody = document.getElementById('tableBody');
+    this.emptyState = document.getElementById('tableEmptyState');
+    this.recordCount = document.getElementById('tableRecordCount');
+    this.searchInput = document.getElementById('tableSearch');
+    this.clearSearchBtn = document.getElementById('btnClearSearch');
+    this.categoryFilter = document.getElementById('tableCategoryFilter');
+    this.tableHeaders = document.querySelectorAll('.data-table th.sortable');
+
     this.bindEvents();
     this.render();
   },
 
   bindEvents() {
-    this.searchInput.addEventListener('input', (e) => {
-      AppState.table.searchQuery = e.target.value.trim().toLowerCase();
-      if (e.target.value) {
-        this.clearSearchBtn.classList.remove('hidden');
-      } else {
-        this.clearSearchBtn.classList.add('hidden');
-      }
-      this.render();
-    });
-
-    this.clearSearchBtn.addEventListener('click', () => {
-      this.searchInput.value = '';
-      AppState.table.searchQuery = '';
-      this.clearSearchBtn.classList.add('hidden');
-      this.render();
-    });
-
-    this.categoryFilter.addEventListener('change', (e) => {
-      AppState.table.categoryFilter = e.target.value;
-      this.render();
-    });
-
-    this.tableHeaders.forEach(th => {
-      th.addEventListener('click', () => {
-        const col = th.getAttribute('data-sort');
-        if (AppState.table.sortColumn === col) {
-          AppState.table.sortDirection = AppState.table.sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-          AppState.table.sortColumn = col;
-          AppState.table.sortDirection = 'asc';
+    if (this.searchInput) {
+      this.searchInput.addEventListener('input', (e) => {
+        AppState.table.searchQuery = e.target.value.trim().toLowerCase();
+        if (this.clearSearchBtn) {
+          if (e.target.value) this.clearSearchBtn.classList.remove('hidden');
+          else this.clearSearchBtn.classList.add('hidden');
         }
-        this.updateSortHeaderStyles();
         this.render();
       });
-    });
+    }
 
-    document.getElementById('btnExportCsv').addEventListener('click', () => this.exportCsv());
-    document.getElementById('btnExportJson').addEventListener('click', () => this.exportJson());
-
-    document.getElementById('btnClearHistory').addEventListener('click', () => {
-      if (AppState.submissions.length === 0) {
-        ToastService.show('Table is empty', 'No records to clear', 'info', 2000);
-        return;
-      }
-      if (confirm('Clear all submitted records from your local table?')) {
-        StorageManager.clearAll();
+    if (this.clearSearchBtn) {
+      this.clearSearchBtn.addEventListener('click', () => {
+        if (this.searchInput) this.searchInput.value = '';
+        AppState.table.searchQuery = '';
+        this.clearSearchBtn.classList.add('hidden');
         this.render();
-        MetricsController.render();
-        ToastService.show('Table Cleared', 'All submissions removed', 'warning', 3000);
-      }
-    });
+      });
+    }
+
+    if (this.categoryFilter) {
+      this.categoryFilter.addEventListener('change', (e) => {
+        AppState.table.categoryFilter = e.target.value;
+        this.render();
+      });
+    }
+
+    if (this.tableHeaders) {
+      this.tableHeaders.forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.getAttribute('data-sort');
+          if (AppState.table.sortColumn === col) {
+            AppState.table.sortDirection = AppState.table.sortDirection === 'asc' ? 'desc' : 'asc';
+          } else {
+            AppState.table.sortColumn = col;
+            AppState.table.sortDirection = 'asc';
+          }
+          this.updateSortHeaderStyles();
+          this.render();
+        });
+      });
+    }
+
+    const btnCsv = document.getElementById('btnExportCsv');
+    if (btnCsv) btnCsv.addEventListener('click', () => this.exportCsv());
+
+    const btnJson = document.getElementById('btnExportJson');
+    if (btnJson) btnJson.addEventListener('click', () => this.exportJson());
+
+    const btnClear = document.getElementById('btnClearHistory');
+    if (btnClear) {
+      btnClear.addEventListener('click', () => {
+        if (AppState.submissions.length === 0) {
+          ToastService.show('Table is empty', 'No records to clear', 'info', 2000);
+          return;
+        }
+        if (confirm('Clear all submitted records from your local table?')) {
+          StorageManager.clearAll();
+          this.render();
+          MetricsController.render();
+          ToastService.show('Table Cleared', 'All submissions removed', 'warning', 3000);
+        }
+      });
+    }
   },
 
   updateSortHeaderStyles() {
+    if (!this.tableHeaders) return;
     this.tableHeaders.forEach(th => {
       const col = th.getAttribute('data-sort');
       th.classList.remove('sort-asc', 'sort-desc');
@@ -746,16 +776,19 @@ const TableController = {
   },
 
   render() {
+    if (!this.tableBody) return;
     const items = this.getFilteredAndSortedData();
-    this.recordCount.textContent = `${items.length} ${items.length === 1 ? 'record' : 'records'}`;
+    if (this.recordCount) {
+      this.recordCount.textContent = `${items.length} ${items.length === 1 ? 'record' : 'records'}`;
+    }
 
     if (items.length === 0) {
       this.tableBody.innerHTML = '';
-      this.emptyState.classList.remove('hidden');
+      if (this.emptyState) this.emptyState.classList.remove('hidden');
       return;
     }
 
-    this.emptyState.classList.add('hidden');
+    if (this.emptyState) this.emptyState.classList.add('hidden');
 
     let html = '';
     items.forEach((item, index) => {
@@ -806,6 +839,7 @@ const TableController = {
   },
 
   attachRowEvents(currentItems) {
+    if (!this.tableBody) return;
     this.tableBody.querySelectorAll('.btn-view-json').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.getAttribute('data-index'), 10);
@@ -917,23 +951,23 @@ const TableController = {
 // ============================================================================
 
 const MetricsController = {
-  statTotalRequests: document.getElementById('statTotalRequests'),
-  statSuccessRate: document.getElementById('statSuccessRate'),
-  statAvgLatency: document.getElementById('statAvgLatency'),
-  statTotalRecords: document.getElementById('statTotalRecords'),
-
   render() {
+    const statTotalRequests = document.getElementById('statTotalRequests');
+    const statSuccessRate = document.getElementById('statSuccessRate');
+    const statAvgLatency = document.getElementById('statAvgLatency');
+    const statTotalRecords = document.getElementById('statTotalRecords');
+
     const { totalRequests, successfulRequests, totalLatencyMs } = AppState.metrics;
     
-    this.statTotalRequests.textContent = totalRequests;
+    if (statTotalRequests) statTotalRequests.textContent = totalRequests;
     
     const rate = totalRequests > 0 ? Math.round((successfulRequests / totalRequests) * 100) : 100;
-    this.statSuccessRate.textContent = `${rate}%`;
+    if (statSuccessRate) statSuccessRate.textContent = `${rate}%`;
 
     const avgLatency = successfulRequests > 0 ? Math.round(totalLatencyMs / successfulRequests) : 0;
-    this.statAvgLatency.textContent = `${avgLatency} ms`;
+    if (statAvgLatency) statAvgLatency.textContent = `${avgLatency} ms`;
 
-    this.statTotalRecords.textContent = AppState.submissions.length;
+    if (statTotalRecords) statTotalRecords.textContent = AppState.submissions.length;
   }
 };
 
@@ -942,32 +976,40 @@ const MetricsController = {
 // ============================================================================
 
 const ModalController = {
-  responseModal: document.getElementById('responseModal'),
-  modalTitle: document.getElementById('modalTitle'),
-  modalJsonContent: document.getElementById('modalJsonContent'),
-  modalStatusCode: document.getElementById('modalStatusCode'),
-  modalLatency: document.getElementById('modalLatency'),
-  modalApiSource: document.getElementById('modalApiSource'),
-  btnCopyModalJson: document.getElementById('btnCopyModalJson'),
-
-  guideModal: document.getElementById('guideModal'),
-
   init() {
-    document.getElementById('btnCloseModal').addEventListener('click', () => this.closeResponseModal());
-    document.getElementById('btnCloseModalBottom').addEventListener('click', () => this.closeResponseModal());
+    this.responseModal = document.getElementById('responseModal');
+    this.modalTitle = document.getElementById('modalTitle');
+    this.modalJsonContent = document.getElementById('modalJsonContent');
+    this.modalStatusCode = document.getElementById('modalStatusCode');
+    this.modalLatency = document.getElementById('modalLatency');
+    this.modalApiSource = document.getElementById('modalApiSource');
+    this.btnCopyModalJson = document.getElementById('btnCopyModalJson');
 
-    document.getElementById('guideBtn').addEventListener('click', () => this.openGuideModal());
-    document.getElementById('btnCloseGuideModal').addEventListener('click', () => this.closeGuideModal());
-    document.getElementById('btnCloseGuideBottom').addEventListener('click', () => this.closeGuideModal());
+    this.guideModal = document.getElementById('guideModal');
 
-    this.btnCopyModalJson.addEventListener('click', () => {
-      const text = this.modalJsonContent.textContent;
-      navigator.clipboard.writeText(text).then(() => {
-        ToastService.show('Copied!', 'JSON payload copied to clipboard', 'info', 2000);
+    const btnCloseModal = document.getElementById('btnCloseModal');
+    const btnCloseModalBottom = document.getElementById('btnCloseModalBottom');
+    if (btnCloseModal) btnCloseModal.addEventListener('click', () => this.closeResponseModal());
+    if (btnCloseModalBottom) btnCloseModalBottom.addEventListener('click', () => this.closeResponseModal());
+
+    const guideBtn = document.getElementById('guideBtn');
+    const btnCloseGuide = document.getElementById('btnCloseGuideModal');
+    const btnCloseGuideBottom = document.getElementById('btnCloseGuideBottom');
+    if (guideBtn) guideBtn.addEventListener('click', () => this.openGuideModal());
+    if (btnCloseGuide) btnCloseGuide.addEventListener('click', () => this.closeGuideModal());
+    if (btnCloseGuideBottom) btnCloseGuideBottom.addEventListener('click', () => this.closeGuideModal());
+
+    if (this.btnCopyModalJson) {
+      this.btnCopyModalJson.addEventListener('click', () => {
+        if (this.modalJsonContent) {
+          navigator.clipboard.writeText(this.modalJsonContent.textContent).then(() => {
+            ToastService.show('Copied!', 'JSON payload copied to clipboard', 'info', 2000);
+          });
+        }
       });
-    });
+    }
 
-    [this.responseModal, this.guideModal].forEach(modal => {
+    [this.responseModal, this.guideModal].filter(Boolean).forEach(modal => {
       modal.addEventListener('click', (e) => {
         if (e.target === modal) {
           this.closeResponseModal();
@@ -985,36 +1027,37 @@ const ModalController = {
   },
 
   openResponseModal(data, title = 'API Response Inspector', statusCode = 201, latency = 0, source = 'REST API') {
-    this.modalTitle.textContent = title;
-    this.modalJsonContent.textContent = JSON.stringify(data, null, 2);
-    this.modalStatusCode.textContent = `${statusCode} OK`;
-    this.modalLatency.textContent = `${latency} ms`;
-    this.modalApiSource.textContent = source;
+    if (!this.responseModal) return;
+    if (this.modalTitle) this.modalTitle.textContent = title;
+    if (this.modalJsonContent) this.modalJsonContent.textContent = JSON.stringify(data, null, 2);
+    if (this.modalStatusCode) this.modalStatusCode.textContent = `${statusCode} OK`;
+    if (this.modalLatency) this.modalLatency.textContent = `${latency} ms`;
+    if (this.modalApiSource) this.modalApiSource.textContent = source;
     this.responseModal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
   },
 
   closeResponseModal() {
-    this.responseModal.classList.add('hidden');
+    if (this.responseModal) this.responseModal.classList.add('hidden');
     document.body.style.overflow = '';
   },
 
   openGuideModal() {
-    this.guideModal.classList.remove('hidden');
+    if (this.guideModal) this.guideModal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
   },
 
   closeGuideModal() {
-    this.guideModal.classList.add('hidden');
+    if (this.guideModal) this.guideModal.classList.add('hidden');
     document.body.style.overflow = '';
   }
 };
 
 const ThemeController = {
-  toggleBtn: document.getElementById('themeToggleBtn'),
-
   init() {
-    this.toggleBtn.addEventListener('click', () => {
+    const toggleBtn = document.getElementById('themeToggleBtn');
+    if (!toggleBtn) return;
+    toggleBtn.addEventListener('click', () => {
       const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', newTheme);
@@ -1028,7 +1071,7 @@ const ThemeController = {
 // 9. App Bootstrap
 // ============================================================================
 
-document.addEventListener('DOMContentLoaded', () => {
+function bootstrapApp() {
   StorageManager.init();
   ThemeController.init();
   ModalController.init();
@@ -1039,4 +1082,10 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     ToastService.show('NovaPost Ready', 'Connected to public POST REST API.', 'info', 3000);
   }, 500);
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootstrapApp);
+} else {
+  bootstrapApp();
+}
